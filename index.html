@@ -267,6 +267,18 @@
           <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="Vegan">Vegan</label>
           <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="ISO">ISO</label>
           <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="GAP">GAP</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="GACC">GACC</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="FDA">FDA</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="KDA">KDA</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="GMP">GMP</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="FSSC22000">FSSC22000</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="BRC">BRC</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="IFS">IFS</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="SQF">SQF</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="친환경">친환경</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="무농약">무농약</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="저탄소">저탄소</label>
+          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="수출검역">수출검역</label>
         </div>
       </div>
       <div class="row1">
@@ -813,7 +825,7 @@ function handleTridge(files){
         // 국가별 분석
         const byCountry={};
         cleaned.forEach(function(r){
-          const country=r[COL_IMPORT_COUNTRY]||r[COL_IMPORT]||r[COL_EXPORT]||'Unknown';
+          const country=r[COL_IMPORT]||r[COL_EXPORT]||r[COL_ORIGIN]||'Unknown';
           if(!byCountry[country]) byCountry[country]={vol:0,val:0,count:0,importers:new Set()};
           const vol=parseFloat(r[COL_VOLUME])||0;
           const price=parseFloat(r[COL_UNIT_PRICE])||0;
