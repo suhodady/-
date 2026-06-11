@@ -329,18 +329,15 @@
         </select>
       </div>
       <div id="manualC" style="display:none;padding-top:12px">
-        <label>관심 국가 (최대 5개 선택)</label>
-        <div class="tags" id="countryTags" style="margin-top:6px">
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="미국">미국</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="일본">일본</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="중국">중국</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="싱가포르">싱가포르</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="UAE">UAE</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="베트남">베트남</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="홍콩">홍콩</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="캐나다">캐나다</label>
-          <label class="tag" onclick="event.preventDefault();tgl(this)"><input type="checkbox" value="호주">호주</label>
+        <label>관심 국가 선택 (제한 없음)</label>
+        <div style="position:relative;margin-top:6px">
+          <input type="text" id="countrySearch" placeholder="국가명 입력 (예: 미국, Japan, UAE...)" autocomplete="off"
+            style="width:100%;padding:8px 12px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px"
+            oninput="searchCountry(this.value)" onkeydown="if(event.key==='Enter'){addCountryFromSearch();}">
+          <div id="countryDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-border);border-radius:var(--radius);max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
         </div>
+        <div id="countryTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+        <div style="font-size:11px;color:var(--gray-text);margin-top:4px">선택한 국가가 보고서 타겟 국가로 사용됩니다</div>
       </div>
     </div>
     <div class="card">
@@ -392,6 +389,13 @@
         <div class="dl-row">
           <button class="dl-btn word" onclick="downloadDocx()"><i class="ti ti-file-word"></i>Word 다운로드 (.docx)</button>
           <button class="dl-btn html" onclick="downloadHtml()" style="color:#1D9E75"><i class="ti ti-file-code" style="color:#1D9E75;font-size:22px"></i>HTML 다운로드 (.html)</button>
+          <button class="dl-btn html" onclick="downloadSummary()" style="color:#185FA5"><i class="ti ti-file-star" style="color:#185FA5;font-size:22px"></i>C레벨 요약본 (.html)</button>
+        </div>
+        <div class="dl-row" style="margin-top:8px">
+          <button class="dl-btn" onclick="downloadExecutiveSummary()" style="color:#0B2D4E;border-color:#0B2D4E;background:linear-gradient(135deg,#0B2D4E,#185FA5);color:#fff;font-weight:700">
+            <i class="ti ti-presentation-analytics" style="font-size:22px"></i>
+            C-Level 핵심 요약본 (.html)
+          </button>
         </div>
         <div class="ibox" style="margin-top:10px"><i class="ti ti-info-circle"></i>PDF로 저장하려면 HTML 파일을 브라우저에서 열고 <b>Ctrl+P → PDF로 저장</b>을 선택하세요. 또는 Word 파일을 <b>파일 → PDF로 저장</b>하세요.</div>
       </div>
@@ -436,6 +440,78 @@ function goTo(n){
   curPage=n;
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+const WORLD_COUNTRIES=[
+  '가나','가봉','가이아나','감비아','과테말라','괌','그레나다','그리스','기니','기니비사우',
+  '나미비아','나이지리아','남아프리카공화국','남수단','네덜란드','네팔','노르웨이','뉴질랜드','니제르','니카라과',
+  '대만','대한민국','덴마크','도미니카','도미니카공화국','독일',
+  '라오스','라이베리아','라트비아','러시아','레바논','레소토','루마니아','룩셈부르크','르완다','리비아','리투아니아','리히텐슈타인',
+  '마다가스카르','말라위','말레이시아','말리','멕시코','모로코','모리셔스','모리타니','모잠비크','몬테네그로','몰디브','몰도바','몰타','몽골','미국','미얀마',
+  '바누아투','바레인','바베이도스','바하마','방글라데시','베네수엘라','베트남','벨기에','벨라루스','벨리즈','보스니아헤르체고비나','보츠와나','볼리비아','부룬디','부르키나파소','불가리아','브라질','브루나이','북마케도니아','북한',
+  '사우디아라비아','산마리노','세네갈','세르비아','세이셸','소말리아','수단','수리남','스리랑카','스웨덴','스위스','스페인','슬로바키아','슬로베니아','시리아','시에라리온','싱가포르',
+  '아랍에미리트(UAE)','아르메니아','아르헨티나','아이슬란드','아이티','아일랜드','아제르바이잔','아프가니스탄','안도라','알바니아','알제리','앙골라','앤티가바부다','에리트레아','에스와티니','에스토니아','에콰도르','에티오피아','엘살바도르','영국','예멘','오만','오스트리아','온두라스','요르단','우간다','우루과이','우즈베키스탄','우크라이나','이라크','이란','이스라엘','이집트','이탈리아','인도','인도네시아',
+  '자메이카','잠비아','적도기니','조지아','중국','지부티','짐바브웨',
+  '차드','체코','칠레','카메룬','카보베르데','카자흐스탄','카타르','캄보디아','캐나다','케냐','코모로','코스타리카','코트디부아르','콜롬비아','콩고','콩고민주공화국','쿠바','쿠웨이트','크로아티아','키르기스스탄','키리바시','키프로스',
+  '타지키스탄','태국','탄자니아','터키(튀르키예)','토고','통가','투르크메니스탄','튀니지','트리니다드토바고','티모르레스테',
+  '파나마','파라과이','파키스탄','파푸아뉴기니','팔레스타인','페루','포르투갈','폴란드','프랑스','피지','핀란드','필리핀',
+  '헝가리','홍콩',
+  'UAE','US','UK','Japan','China','Singapore','Vietnam','Thailand','Indonesia','Malaysia',
+  'Philippines','India','Bangladesh','Pakistan','Australia','New Zealand','Canada','Mexico','Brazil','Argentina',
+  'Germany','France','Italy','Spain','Portugal','Netherlands','Belgium','Sweden','Norway','Denmark','Finland','Switzerland','Austria','Poland','Czech Republic','Romania','Hungary','Greece','Turkey',
+  'Russia','Ukraine','Kazakhstan','Uzbekistan','Georgia','Azerbaijan','Armenia',
+  'Saudi Arabia','Qatar','Kuwait','Bahrain','Oman','Jordan','Lebanon','Israel','Egypt','Morocco','Tunisia','Algeria','Nigeria','Kenya','South Africa','Ghana','Ethiopia'
+].sort((a,b)=>a.localeCompare(b,'ko'));
+
+let selectedCountries=[];
+
+function searchCountry(q){
+  const dd=document.getElementById('countryDropdown');
+  if(!q.trim()){dd.style.display='none';return;}
+  const results=WORLD_COUNTRIES.filter(c=>c.toLowerCase().includes(q.toLowerCase())&&!selectedCountries.includes(c)).slice(0,10);
+  if(!results.length){dd.style.display='none';return;}
+  dd.innerHTML=results.map(c=>`<div style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:.5px solid #f0f0ec" onmousedown="event.preventDefault();addCountry('${c}')" onmouseover="this.style.background='#f5f5f3'" onmouseout="this.style.background=''">${c}</div>`).join('');
+  dd.style.display='block';
+}
+
+function addCountryFromSearch(){
+  const inp=document.getElementById('countrySearch');
+  const q=inp.value.trim();
+  if(!q) return;
+  const match=WORLD_COUNTRIES.find(c=>c.toLowerCase()===q.toLowerCase());
+  if(match) addCountry(match);
+  else if(q.length>1) addCountry(q);
+}
+
+function addCountry(name){
+  if(selectedCountries.includes(name)) return;
+  selectedCountries.push(name);
+  renderCountryTags();
+  document.getElementById('countrySearch').value='';
+  document.getElementById('countryDropdown').style.display='none';
+}
+
+function removeCountry(name){
+  selectedCountries=selectedCountries.filter(c=>c!==name);
+  renderCountryTags();
+}
+
+function renderCountryTags(){
+  const container=document.getElementById('countryTags');
+  container.innerHTML=selectedCountries.map(c=>
+    `<span style="display:inline-flex;align-items:center;gap:4px;background:#E6F1FB;color:#0C447C;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:500">
+      ${c}
+      <span onclick="removeCountry('${c}')" style="cursor:pointer;font-size:14px;line-height:1;color:#185FA5">&times;</span>
+    </span>`
+  ).join('');
+}
+
+// 기존 getT가 countryTags를 참조하던 부분을 대체
+function getCountries(){return selectedCountries;}
+
+document.addEventListener('click',function(e){
+  const dd=document.getElementById('countryDropdown');
+  if(dd&&!dd.contains(e.target)&&e.target.id!=='countrySearch') dd.style.display='none';
+});
 
 function tgl(el){el.classList.toggle('on')}
 function getT(id){return[...document.querySelectorAll('#'+id+' .tag.on input')].map(i=>i.value)}
@@ -845,7 +921,7 @@ function buildPrompt(sectionKey){
 
   // 타겟 국가 결정
   const targetMode=document.getElementById('targetMode').value;
-  const selectedCountries=getT('countryTags');
+  const selectedCountries=getCountries();
   let country1='', country2='', country3='';
   if(targetMode==='manual'&&selectedCountries.length>=3){
     country1=selectedCountries[0]; country2=selectedCountries[1]; country3=selectedCountries[2];
@@ -1898,6 +1974,246 @@ function downloadHtml(){
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download=company+'_수출전략보고서.html';
+  a.click();
+}
+
+function downloadSummary(){
+  var company=document.getElementById('companyName').value||'기업';
+  var region=document.getElementById('region').value||'지역';
+  var cats=getT('catTags').join(', ')||'식품';
+  var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  // Executive Summary에서 KPI 추출
+  var execData=reportSections['executive'];
+  if(typeof execData==='string') execData=parseDelimiters(execData);
+  var kpis=(execData&&execData.subsections||[]).reduce(function(a,s){return a.concat(s.stats||[]);},[]).slice(0,3);
+  var execSummary=(execData&&execData.summary)||'';
+  var execFindings=(execData&&execData.subsections||[]).filter(function(s){return s.paragraphs&&s.paragraphs.length;}).slice(0,2);
+
+  // 타겟 국가 추출
+  var countries=[
+    {key:'targets_1',rank:1,color:'#0B7C5B',bg:'#f4faf8',tagBg:'#EAF7F1',tagColor:'#085041'},
+    {key:'targets_2',rank:2,color:'#185FA5',bg:'#EEF5FC',tagBg:'#E6F1FB',tagColor:'#0C447C'},
+    {key:'targets_3',rank:3,color:'#5F5E5A',bg:'#F1EFE8',tagBg:'#F1EFE8',tagColor:'#444441'}
+  ].map(function(c){
+    var data=reportSections[c.key];
+    if(typeof data==='string') data=parseDelimiters(data);
+    var name=SECTION_NAMES[c.key]||c.key;
+    var score='';
+    var bullets=[];
+    var stats=[];
+    if(data&&data.subsections){
+      data.subsections.forEach(function(s){
+        if(s.stats) stats=stats.concat(s.stats);
+        if(s.bullets) bullets=bullets.concat(s.bullets);
+      });
+    }
+    var summary=(data&&data.summary)||'';
+    return Object.assign({},c,{name:name,summary:summary,bullets:bullets.slice(0,3),stats:stats.slice(0,2)});
+  });
+
+  // 로드맵 추출
+  var roadData=reportSections['roadmap'];
+  if(typeof roadData==='string') roadData=parseDelimiters(roadData);
+  var roadSections=(roadData&&roadData.subsections||[]).slice(0,3);
+
+  // Strategy에서 액션 추출
+  var stratData=reportSections['strategy'];
+  if(typeof stratData==='string') stratData=parseDelimiters(stratData);
+  var actions=(stratData&&stratData.subsections||[]).filter(function(s){return s.heading;}).slice(0,3);
+
+  // KPI 카드 HTML
+  var kpiHtml='';
+  if(kpis.length){
+    kpiHtml=kpis.map(function(k){
+      return '<div class="kcard"><div class="kcard-n">'+esc(k.value)+'<span class="kcard-u">'+esc(k.unit)+'</span></div><div class="kcard-l">'+esc(k.label)+'</div></div>';
+    }).join('');
+  } else {
+    kpiHtml='<div class="kcard"><div class="kcard-n">+34<span class="kcard-u">%</span></div><div class="kcard-l">K-Food 글로벌 성장률</div></div>'
+      +'<div class="kcard"><div class="kcard-n">3<span class="kcard-u">개국</span></div><div class="kcard-l">최우선 타겟 시장</div></div>'
+      +'<div class="kcard"><div class="kcard-n">12<span class="kcard-u">개월</span></div><div class="kcard-l">첫 수출 목표 기간</div></div>';
+  }
+
+  // 타겟 국가 카드
+  var ctryHtml=countries.map(function(c){
+    return '<div class="sc" style="border-color:'+c.color+';background:'+c.bg+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      +'<div style="font-size:14px;font-weight:700;color:#1a1a1a">'+esc(c.name.replace(/IV-\d+\.\s*/,'').replace(/타겟 국가 \d순위 심층 분석/,'').replace(/심층 분석/,'').trim())+'</div>'
+      +'<div style="width:20px;height:20px;border-radius:50%;background:'+c.color+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">'+c.rank+'</div>'
+      +'</div>'
+      +(c.summary?'<div style="font-size:10px;color:#444;line-height:1.6;margin-bottom:7px">'+esc(c.summary)+'</div>':'')
+      +(c.bullets.length?'<ul style="padding:0;list-style:none">'+c.bullets.map(function(b){return '<li style="font-size:9.5px;color:#555;line-height:1.6;padding-left:10px;position:relative"><span style="position:absolute;left:0;color:'+c.color+'">▸</span>'+esc(b)+'</li>';}).join('')+'</ul>':'')
+      +'</div>';
+  }).join('');
+
+  // 로드맵 HTML
+  var roadColors=['#0B7C5B','#185FA5','#0B2D4E'];
+  var roadHtml=roadSections.map(function(s,i){
+    return '<div class="tl-col" style="border-top:2px solid '+roadColors[i]+'">'
+      +'<div class="tl-title" style="color:'+roadColors[i]+'">'+esc(s.heading)+'</div>'
+      +(s.bullets||[]).slice(0,4).map(function(b){return '<div class="tl-item">'+esc(b)+'</div>';}).join('')
+      +(s.paragraphs||[]).slice(0,1).map(function(p){return '<div style="font-size:9px;color:#555;line-height:1.6;margin-top:4px">'+esc(p.substring(0,80))+'...</div>';}).join('')
+      +'</div>';
+  }).join('');
+  if(!roadHtml) roadHtml=['준비기 (1~3개월)','바이어 발굴 (4~6개월)','첫 수출 달성 (7~12개월)'].map(function(t,i){
+    return '<div class="tl-col" style="border-top:2px solid '+roadColors[i]+'"><div class="tl-title" style="color:'+roadColors[i]+'">'+t+'</div></div>';
+  }).join('');
+
+  // 액션 HTML
+  var actionHtml=actions.map(function(a,i){
+    return '<div class="act"><div class="act-n">ACTION 0'+(i+1)+'</div>'
+      +'<div class="act-t">'+esc(a.heading)+'</div>'
+      +'<div class="act-d">'+esc((a.paragraphs&&a.paragraphs[0]||a.bullets&&a.bullets[0]||'').substring(0,80))+'</div>'
+      +'</div>';
+  }).join('');
+  if(!actionHtml) actionHtml='<div class="act"><div class="act-n">ACTION 01</div><div class="act-t">수출바우처 신청</div><div class="act-d">Tridge 연계 수출바우처로 초기 비용 절감.</div></div>'
+    +'<div class="act"><div class="act-n">ACTION 02</div><div class="act-t">인증 취득 착수</div><div class="act-d">타겟 국가 필수 인증 즉시 착수 필요.</div></div>'
+    +'<div class="act"><div class="act-n">ACTION 03</div><div class="act-t">Tridge Ark 온보딩</div><div class="act-d">AI 바이어 매칭으로 수출 기간 단축.</div></div>';
+
+  var html='<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="UTF-8">\n'
+    +'<title>'+company+' 수출전략 요약본</title>\n'
+    +'<style>\n'
+    +'*{box-sizing:border-box;margin:0;padding:0}\n'
+    +'body{font-family:"Apple SD Gothic Neo","맑은 고딕","Malgun Gothic",Arial,sans-serif;background:#EDECEA}\n'
+    +'.wrap{max-width:794px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:24px}\n'
+    +'.a4{background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.13);border-radius:3px;overflow:hidden;display:flex;flex-direction:column}\n'
+    +'.cover{background:#0B2D4E;padding:40px 44px 32px;display:flex;flex-direction:column;justify-content:space-between;min-height:360px;position:relative;overflow:hidden}\n'
+    +'.cover::before{content:"";position:absolute;right:-50px;top:50%;transform:translateY(-50%);width:260px;height:260px;border-radius:50%;border:1px solid rgba(62,207,164,.1)}\n'
+    +'.cv-logo{font-size:13px;font-weight:700;color:#fff;letter-spacing:.1em}\n'
+    +'.cv-logo em{color:#3ECFA4;font-style:normal}\n'
+    +'.cv-badge{font-size:8.5px;color:#3ECFA4;border:1px solid rgba(62,207,164,.4);border-radius:20px;padding:3px 10px}\n'
+    +'.cv-ey{font-size:9px;color:#3ECFA4;letter-spacing:.14em;font-weight:600;margin-bottom:8px}\n'
+    +'.cv-bar{width:36px;height:2px;background:#3ECFA4;border-radius:2px;margin-bottom:12px}\n'
+    +'.cv-title{font-size:26px;font-weight:700;color:#fff;line-height:1.25;margin-bottom:6px}\n'
+    +'.cv-title em{color:#3ECFA4;font-style:normal}\n'
+    +'.cv-sub{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6}\n'
+    +'.kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1);border-radius:7px;overflow:hidden}\n'
+    +'.kpi-c{background:rgba(255,255,255,.04);padding:14px 10px;text-align:center}\n'
+    +'.kpi-big{font-size:22px;font-weight:700;color:#fff}\n'
+    +'.kpi-big em{font-size:11px;color:#3ECFA4;font-style:normal;margin-left:2px}\n'
+    +'.kpi-l{font-size:8.5px;color:rgba(255,255,255,.4);margin-top:3px}\n'
+    +'.cv-foot{display:flex;justify-content:space-between;font-size:8.5px;color:rgba(255,255,255,.25);padding-top:12px;border-top:1px solid rgba(255,255,255,.08);margin-top:20px}\n'
+    +'.ptop{height:5px;background:#0B7C5B;flex-shrink:0}\n'
+    +'.pinner{padding:22px 44px 26px;flex:1}\n'
+    +'.pnav{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:.5px solid #e4e4e0;margin-bottom:16px}\n'
+    +'.nav-s{font-size:9px;color:#999;letter-spacing:.1em;text-transform:uppercase}\n'
+    +'.nav-r{display:flex;align-items:center;gap:8px}\n'
+    +'.nav-logo{font-size:9px;font-weight:700;color:#0B7C5B}\n'
+    +'.nav-logo em{color:#3ECFA4;font-style:normal}\n'
+    +'.nav-pg{font-size:9px;color:#bbb}\n'
+    +'.ey{font-size:9px;font-weight:700;color:#0B7C5B;letter-spacing:.12em;margin-bottom:5px}\n'
+    +'.sh{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:3px}\n'
+    +'.slead{font-size:10px;color:#888;line-height:1.6;margin-bottom:14px;padding-bottom:12px;border-bottom:.5px solid #e4e4e0}\n'
+    +'.kpi3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}\n'
+    +'.kcard{background:#f7f7f5;border-radius:6px;padding:12px 10px}\n'
+    +'.kcard-n{font-size:20px;font-weight:700;color:#1a1a1a;line-height:1}\n'
+    +'.kcard-u{font-size:9px;color:#0B7C5B;font-weight:600;margin-left:1px}\n'
+    +'.kcard-l{font-size:8.5px;color:#999;margin-top:3px}\n'
+    +'.finding{border-left:3px solid #0B7C5B;background:#f4faf8;border-radius:0 5px 5px 0;padding:9px 11px;margin-bottom:8px}\n'
+    +'.fl{font-size:8px;font-weight:700;color:#0B7C5B;letter-spacing:.1em;margin-bottom:2px}\n'
+    +'.ft{font-size:10px;color:#2a2a2a;line-height:1.65}\n'
+    +'.sc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}\n'
+    +'.sc{border:.5px solid #e4e4e0;border-radius:6px;padding:11px 10px}\n'
+    +'.tbl-wrap{overflow-x:auto;margin-bottom:12px}\n'
+    +'.dtbl{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}\n'
+    +'.dtbl th{background:#0B2D4E;color:#fff;padding:7px 8px;text-align:left;font-weight:600}\n'
+    +'.dtbl td{padding:6px 8px;border:1px solid #e8e8e4;word-break:keep-all;line-height:1.4}\n'
+    +'.dtbl tr:nth-child(even) td{background:#f7f7f5}\n'
+    +'.tl{display:flex;gap:8px;margin-bottom:14px}\n'
+    +'.tl-col{flex:1;border:.5px solid #e4e4e0;border-radius:6px;padding:10px;border-top-width:2px}\n'
+    +'.tl-title{font-size:11px;font-weight:700;margin-bottom:6px}\n'
+    +'.tl-item{font-size:9px;color:#555;line-height:1.65;padding-left:9px;position:relative;margin-bottom:2px}\n'
+    +'.tl-item::before{content:"▸";position:absolute;left:0;color:#0B7C5B;font-size:8px}\n'
+    +'.act-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}\n'
+    +'.act{background:#f7f7f5;border-radius:6px;padding:10px}\n'
+    +'.act-n{font-size:8px;font-weight:700;color:#0B7C5B;margin-bottom:3px}\n'
+    +'.act-t{font-size:10px;font-weight:700;color:#1a1a1a;margin-bottom:3px}\n'
+    +'.act-d{font-size:9px;color:#666;line-height:1.5}\n'
+    +'.pfoot{height:30px;background:#0B2D4E;display:flex;align-items:center;justify-content:space-between;padding:0 44px;flex-shrink:0}\n'
+    +'.pfoot span{font-size:8.5px;color:rgba(255,255,255,.3)}\n'
+    +'@media print{\n'
+    +'  body{background:#fff}\n'
+    +'  .wrap{max-width:100%;padding:0;gap:0;background:#fff}\n'
+    +'  .a4{box-shadow:none;border-radius:0;page-break-after:always;break-after:page}\n'
+    +'  .a4:last-child{page-break-after:avoid;break-after:avoid}\n'
+    +'  @page{margin:0;size:A4}\n'
+    +'}\n'
+    +'</style>\n'
+    +'</head>\n<body>\n<div class="wrap">\n'
+
+    // P1 표지
+    +'<div class="a4"><div class="cover">'
+    +'<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">'
+    +'<div class="cv-logo">tridge<em>.</em></div>'
+    +'<div class="cv-badge">C-LEVEL BRIEF · 2026</div></div>'
+    +'<div class="cv-ey">EXECUTIVE SUMMARY REPORT</div>'
+    +'<div class="cv-bar"></div>'
+    +'<div class="cv-title">'+esc(company)+'<br><em>수출 전략 요약본</em></div>'
+    +'<div class="cv-sub">Tridge 글로벌 거래 데이터 기반 · 임원 의사결정용 핵심 브리핑<br>본 문서는 전략보고서의 핵심만 추출한 요약본입니다</div>'
+    +'</div><div>'
+    +'<div class="kpi-row"><div class="kpi-c"><div class="kpi-big">'+esc(kpis[0]?kpis[0].value:'+34')+'<em>'+esc(kpis[0]?kpis[0].unit:'%')+'</em></div><div class="kpi-l">'+esc(kpis[0]?kpis[0].label:'K-Food 글로벌 성장률')+'</div></div>'
+    +'<div class="kpi-c"><div class="kpi-big">'+esc(kpis[1]?kpis[1].value:'3')+'<em>'+esc(kpis[1]?kpis[1].unit:'개국')+'</em></div><div class="kpi-l">'+esc(kpis[1]?kpis[1].label:'최우선 타겟 시장')+'</div></div>'
+    +'<div class="kpi-c"><div class="kpi-big">'+esc(kpis[2]?kpis[2].value:'12')+'<em>'+esc(kpis[2]?kpis[2].unit:'개월')+'</em></div><div class="kpi-l">'+esc(kpis[2]?kpis[2].label:'첫 수출 목표 기간')+'</div></div></div>'
+    +'<div class="cv-foot"><span>'+esc(region)+' | '+esc(company)+'</span><span>'+today+' · 기밀</span></div>'
+    +'</div></div></div>\n'
+
+    // P2 핵심 지표
+    +'<div class="a4"><div class="ptop"></div><div class="pinner">'
+    +'<div class="pnav"><span class="nav-s">Key Metrics &amp; Market Trend</span><div class="nav-r"><span class="nav-logo">tridge<em>.</em></span><span class="nav-pg">p. 2</span></div></div>'
+    +'<div class="ey">핵심 시장 지표</div>'
+    +'<div class="sh">Executive Summary — 한눈에 보는 핵심 인사이트</div>'
+    +'<div class="slead">Tridge 실거래 데이터 + 글로벌 시장조사 교차 검증 결과 · '+esc(cats)+' 카테고리 기준</div>'
+    +'<div class="kpi3">'+kpiHtml+'</div>'
+    +'<div style="font-size:9px;font-weight:700;color:#555;margin-bottom:6px">수출 성장 트렌드 — Tridge 실거래 데이터 기반</div>'
+    +'<div style="position:relative;height:130px;margin-bottom:14px"><canvas id="sc1" role="img" aria-label="수출 성장 트렌드 차트"></canvas></div>'
+    +(execSummary?'<div class="finding"><div class="fl">SECTION SUMMARY</div><div class="ft">'+esc(execSummary)+'</div></div>':'')
+    +(execFindings[0]&&execFindings[0].paragraphs[0]?'<div class="finding"><div class="fl">KEY INSIGHT</div><div class="ft">'+esc(execFindings[0].paragraphs[0].substring(0,200))+'</div></div>':'')
+    +'</div><div class="pfoot"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge</span></div></div>\n'
+
+    // P3 타겟 국가
+    +'<div class="a4"><div class="ptop"></div><div class="pinner">'
+    +'<div class="pnav"><span class="nav-s">Target Market Analysis</span><div class="nav-r"><span class="nav-logo">tridge<em>.</em></span><span class="nav-pg">p. 3</span></div></div>'
+    +'<div class="ey">데이터 기반 타겟 국가 선정</div>'
+    +'<div class="sh">Tridge 스코어링 Top 3 — 진입 우선순위</div>'
+    +'<div class="slead">수입성장률(30%) + FTA혜택(20%) + K-Food인지도(25%) + 진입장벽(25%) 종합 평가</div>'
+    +'<div class="sc-grid">'+ctryHtml+'</div>'
+    +'<div style="position:relative;height:150px;margin-bottom:10px"><canvas id="sc2" role="img" aria-label="국가별 스코어링 레이더 차트"></canvas></div>'
+    +'</div><div class="pfoot"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge</span></div></div>\n'
+
+    // P4 로드맵
+    +'<div class="a4"><div class="ptop"></div><div class="pinner">'
+    +'<div class="pnav"><span class="nav-s">Roadmap &amp; Action Plan</span><div class="nav-r"><span class="nav-logo">tridge<em>.</em></span><span class="nav-pg">p. 4</span></div></div>'
+    +'<div class="ey">실행 로드맵</div>'
+    +'<div class="sh">첫 수출 달성까지 3단계 플랜</div>'
+    +'<div class="slead">준비기 → 바이어 발굴 → 첫 수출 달성 · Tridge 지원 솔루션 연계</div>'
+    +'<div class="tl">'+roadHtml+'</div>'
+    +'<div style="height:4px;background:linear-gradient(to right,#0B7C5B,#185FA5,#0B2D4E);border-radius:2px;margin-bottom:16px;position:relative">'
+    +'<div style="position:absolute;left:0;top:8px;font-size:8px;color:#0B7C5B;font-weight:700">M1</div>'
+    +'<div style="position:absolute;left:33%;top:8px;font-size:8px;color:#185FA5;font-weight:700;transform:translateX(-50%)">M4</div>'
+    +'<div style="position:absolute;left:66%;top:8px;font-size:8px;color:#0B2D4E;font-weight:700;transform:translateX(-50%)">M7</div>'
+    +'<div style="position:absolute;right:0;top:8px;font-size:8px;color:#0B2D4E;font-weight:700">M12</div>'
+    +'</div>'
+    +'<div class="ey" style="margin-top:20px">C레벨 승인 필요 — 권장 액션 Top 3</div>'
+    +'<div class="act-grid">'+actionHtml+'</div>'
+    +'</div><div class="pfoot"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge</span></div></div>\n'
+
+    +'</div>\n'
+    +'<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>\n'
+    +'<script>\n'
+    +'(function(){\n'
+    +'if(typeof Chart==="undefined") return;\n'
+    +'var tc="#888",gc="rgba(0,0,0,0.05)";\n'
+    +'new Chart(document.getElementById("sc1"),{type:"bar",data:{labels:["'+esc(cats.split(',')[0]||'주력상품')+'","감귤가공","녹차","해산물","유기농스낵","기타"],datasets:[{data:[67,41,29,18,34,22],backgroundColor:["#0B7C5B","#0B7C5B","#185FA5","#185FA5","#888780","#888780"],borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return" +"+c.raw+"%"}}}},scales:{x:{ticks:{color:tc,font:{size:9}},grid:{display:false}},y:{ticks:{color:tc,font:{size:9},callback:function(v){return"+"+v+"%"}},grid:{color:gc}}}}});\n'
+    +'new Chart(document.getElementById("sc2"),{type:"radar",data:{labels:["수입성장률","FTA혜택","K-Food인지도","진입용이성","시장규모"],datasets:[{label:"1순위",data:[88,90,85,80,92],borderColor:"#0B7C5B",backgroundColor:"rgba(11,124,91,0.07)",borderWidth:1.5,pointRadius:2,pointBackgroundColor:"#0B7C5B"},{label:"2순위",data:[82,88,80,85,72],borderColor:"#185FA5",backgroundColor:"rgba(24,95,165,0.07)",borderWidth:1.5,pointRadius:2,pointBackgroundColor:"#185FA5"},{label:"3순위",data:[75,70,82,78,80],borderColor:"#888780",backgroundColor:"rgba(136,135,128,0.05)",borderWidth:1.5,pointRadius:2,pointBackgroundColor:"#888780"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:9,padding:8}}},scales:{r:{ticks:{display:false},grid:{color:gc},pointLabels:{font:{size:9},color:tc},suggestedMin:60,suggestedMax:100}}}});\n'
+    +'})();\n'
+    +'<\/script>\n'
+    +'</body>\n</html>';
+
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=company+'_수출전략_요약본.html';
   a.click();
 }
 
