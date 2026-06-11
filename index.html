@@ -581,7 +581,32 @@ async function analyzeDoc(){
     for(const [k,id] of Object.entries(fields)){
       if(data[k]) document.getElementById(id).value=data[k];
     }
-    document.getElementById('analyzeLbl').textContent='✓ 자동 입력 완료';
+
+    // 인증 태그 자동 선택
+    if(data.certs&&data.certs.length){
+      const certMap={'HACCP':'HACCP','유기농':'유기농','Halal':'Halal','Kosher':'Kosher',
+        'Non-GMO':'Non-GMO','Vegan':'Vegan','ISO':'ISO','GAP':'GAP'};
+      document.querySelectorAll('#certTags .tag').forEach(function(tag){
+        const val=tag.querySelector('input').value;
+        const matched=data.certs.some(function(c){
+          return c&&val&&(c.toUpperCase().includes(val.toUpperCase())||val.toUpperCase().includes(c.toUpperCase()));
+        });
+        if(matched) tag.classList.add('on');
+      });
+    }
+
+    // 제품 카테고리 태그 자동 선택
+    if(data.cats&&data.cats.length){
+      document.querySelectorAll('#catTags .tag').forEach(function(tag){
+        const val=tag.querySelector('input').value;
+        const matched=data.cats.some(function(c){
+          return c&&val&&(c.includes(val.replace('/',''))||val.includes(c)||c.includes(val));
+        });
+        if(matched) tag.classList.add('on');
+      });
+    }
+
+    document.getElementById('analyzeLbl').textContent='✓ 자동 입력 완료 (인증·카테고리 태그도 자동 선택됨)';
     document.getElementById('analyzeSpin').style.display='none';
     document.getElementById('analyzeIcon').style.display='inline';
     document.getElementById('analyzeBtnEl').disabled=false;
