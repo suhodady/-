@@ -409,12 +409,14 @@ let curPage=1, dataMode='none', selModel='claude';
   let tridgeData='';
   let reportSections={};
 
-const SECTION_KEYS=['executive','diagnosis','kfood','targets','strategy','roadmap'];
+const SECTION_KEYS=['executive','diagnosis','kfood','targets_1','targets_2','targets_3','strategy','roadmap'];
 const SECTION_NAMES={
   executive:'I. Executive Summary',
   diagnosis:'II. 경쟁력 진단',
   kfood:'III. K-Food 글로벌 동향',
-  targets:'IV. 타겟 국가 Top 3 심층 분석',
+  targets_1:'IV-1. 타겟 국가 1순위 심층 분석',
+  targets_2:'IV-2. 타겟 국가 2순위 심층 분석',
+  targets_3:'IV-3. 타겟 국가 3순위 심층 분석',
   strategy:'V. 수출 전략 & 바이어 매칭',
   roadmap:'VI. 실행 로드맵 & Action Plan'
 };
@@ -551,7 +553,7 @@ async function analyzeDoc(){
       const r=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
         headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,messages:[{role:'user',content:userContent}]})
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:8000,messages:[{role:'user',content:userContent}]})
       });
       if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
       const d=await r.json();
@@ -658,41 +660,160 @@ function buildPrompt(sectionKey){
   const cs=document.getElementById('caseStudy').value==='yes';
   const ark=document.getElementById('arkSection').value==='yes';
   const tdata=tridgeData?'\n[Tridge 거래 데이터]\n'+tridgeData.substring(0,2000):'';
+  const langStr=lang==='ko'?'한국어':lang==='en'?'영어':'한국어 (주요 용어 영문 병기)';
 
-  const sections={
-    executive:'I. Executive Summary (A4 2페이지 분량)\n핵심 수치 중심 Hook, 보고서 목적, 기대 효과, Tridge가 제안하는 핵심 타겟 국가 3개 및 전략 핵심 메시지',
-    diagnosis:'II. '+region+' 식품산업 글로벌 경쟁력 진단 (A4 3~4페이지)\n1. '+region+' 프리미엄의 글로벌 가치 (청정 자연, 비건/유기농 트렌드, 구체적 수치)\n2. 글로벌 트렌드와의 부합성 (K-Food 열풍, 프리미엄 식품 수요)\n3. 글로벌 진출 시 선제 준비 필요 영역 (비대립적 프레이밍)',
-    kfood:'III. Tridge Data 기반 글로벌 K-Food & 프리미엄 식품 동향 (A4 4~5페이지)\n1. 최근 3년간 한국 식품 수출입 물동량 변화\n2. 글로벌 B2B 바이어 검색 트렌드\n3. 경쟁 청정 지역 비교 분석\n4. '+cats+' 카테고리 글로벌 가격 동향',
-    targets:'IV. 데이터 기반 유망 타겟 국가 Top 3 심층 분석 (A4 10~12페이지)\nTridge 스코어링 기준: 수입성장률(30%)+FTA혜택(20%)+K-Food인지도(25%)+진입장벽(25%)\n각 국가별: 시장 개요, 수입 트렌드, 유통 구조, 현지 거래 가격대, 바이어 소싱 기준'+(cs?', 성공 사례 1건':''),
-    strategy:'V. Tridge B2B 플랫폼 활용 실전 수출 전략 (A4 5~6페이지)\n1. 디지털 쇼룸 구축 전략\n2. 타겟 바이어 페르소나 분석\n3. 프라이싱 전략'+(fob?' (희망 단가 '+fob+' 기준)':'')+(moq?' / MOQ '+moq:'')+('\n4. 첫 수출 성공을 위한 실전 팁')+(ark?'\n5. Tridge Ark AI 에이전트 활용':''),
-    roadmap:'VI. 실행 로드맵 & Action Plan (A4 3~4페이지)\n준비기(1~3개월), 바이어 발굴 및 협상기(4~6개월), 첫 수출 달성 및 확장기(7~12개월)\nTridge 제공 솔루션: 무역대행, 수출바우처지원사업, Ark 온보딩'
+  // 타겟 국가 결정
+  const targetMode=document.getElementById('targetMode').value;
+  const selectedCountries=getT('countryTags');
+  let country1='', country2='', country3='';
+  if(targetMode==='manual'&&selectedCountries.length>=3){
+    country1=selectedCountries[0]; country2=selectedCountries[1]; country3=selectedCountries[2];
+  } else if(targetMode==='manual'&&selectedCountries.length>0){
+    country1=selectedCountries[0]||'';
+    country2=selectedCountries[1]||'';
+    country3=selectedCountries[2]||'';
+  }
+  const countryNote=targetMode==='manual'&&country1
+    ?'타겟 국가는 고객이 직접 선택했습니다: 1순위 '+country1+(country2?', 2순위 '+country2:'')+(country3?', 3순위 '+country3:'')
+    :'타겟 국가는 Tridge 스코어링(수입성장률 30%+FTA혜택 20%+K-Food인지도 25%+진입장벽 25%) 기준으로 AI가 자동 선정합니다. 가장 적합한 3개국을 선정하고 그 이유를 스코어링 근거와 함께 명확히 제시하세요.';
+
+  const targetCountry={
+    targets_1: targetMode==='manual'&&country1 ? country1 : '스코어링 1위 국가 (직접 선정)',
+    targets_2: targetMode==='manual'&&country2 ? country2 : '스코어링 2위 국가 (직접 선정)',
+    targets_3: targetMode==='manual'&&country3 ? country3 : '스코어링 3위 국가 (직접 선정)'
   };
 
-  const langStr=lang==='ko'?'한국어':lang==='en'?'영어':'한국어 (주요 용어 영문 병기)';
+  const sections={
+    executive:'I. Executive Summary (A4 2페이지 충분한 분량)\n'
+      +'- 핵심 수치 3개를 [STAT] 태그로 표현 (K-Food 성장률, 타겟 국가 수, 기대 효과)\n'
+      +'- 보고서 목적 및 기대 효과 (2~3단락)\n'
+      +'- 트릿지가 제안하는 핵심 타겟 국가 3개 및 선정 배경 요약\n'
+      +'- 트릿지 플랫폼 활용 시 기대되는 구체적 성과\n'
+      +countryNote,
+
+    diagnosis:'II. '+region+' 식품산업 글로벌 경쟁력 진단 (A4 3~4페이지 충분한 분량)\n'
+      +'[H2] 1. '+region+' 프리미엄의 글로벌 가치\n'
+      +'- 청정 자연환경, 비건/유기농 트렌드 부합성 (구체적 수치 포함)\n'
+      +'- 주요 제품('+cats+')의 글로벌 포지셔닝 가능성\n'
+      +'[H2] 2. 글로벌 트렌드와의 부합성\n'
+      +'- K-Food 열풍, 프리미엄 식품 수요 증가 트렌드\n'
+      +'- Clean Label, 유기농, 비건 트렌드와의 연결\n'
+      +'[H2] 3. 글로벌 진출 시 선제 준비 필요 영역\n'
+      +'- 물류비, 인증, 바이어 발굴 등 항목별 준비 방향 (비대립적 프레이밍)\n'
+      +'- 트릿지 플랫폼을 통한 해결 방향',
+
+    kfood:'III. Tridge Data 기반 글로벌 K-Food 동향 (A4 4~5페이지 충분한 분량)\n'
+      +'[H2] 1. 최근 3년간 한국 프리미엄 식음료 수출 변화\n'
+      +'- 품목별 수출 증감률 [TABLE]로 표현 (최소 5개 품목)\n'
+      +'[H2] 2. 글로벌 B2B 바이어 검색 트렌드\n'
+      +'- 트릿지 플랫폼 내 상위 키워드 [TABLE]로 표현\n'
+      +'[H2] 3. 경쟁 청정 지역 비교 분석\n'
+      +'- 뉴질랜드, 하와이 등 경쟁 지역 대비 '+region+' 포지셔닝\n'
+      +'[H2] 4. '+cats+' 카테고리 글로벌 가격 동향\n'
+      +'- 주요 수출국별 도매 가격대 비교',
+
+    targets_1:'IV-1. 타겟 국가 1순위: '+targetCountry['targets_1']+' 심층 분석 (A4 3~4페이지 충분한 분량)\n'
+      +countryNote+'\n\n'
+      +'[H2] 국가 선정 배경 및 스코어링 근거\n'
+      +'- 왜 이 국가가 1순위인지 스코어링 항목별 점수와 함께 명확히 설명\n'
+      +'- 수입성장률, FTA혜택, K-Food인지도, 진입장벽 항목별 분석\n'
+      +'[H2] 시장 개요\n'
+      +'- 인구, GDP, 식품 수입 규모, K-Food 선호도 (구체적 수치)\n'
+      +'[H2] 수입 트렌드 분석\n'
+      +'- 최근 3년 수입 증감률, 주요 수입 카테고리 [TABLE]\n'
+      +'[H2] 유통 구조\n'
+      +'- 주요 유통 채널별 특성 (대형마트, 온라인, 로컬 벤더 등)\n'
+      +'[H2] 현지 거래 가격대\n'
+      +'- '+cats+' 유사 품목 현지 도매/소매 가격대 [TABLE]\n'
+      +'[H2] 바이어 소싱 기준\n'
+      +'- 필수 인증, 패키징 요건, MOQ 기준\n'
+      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건 (구체적 수치 포함)\n':'')
+      +'[H2] FTA 및 관세 혜택\n'
+      +'- 한국과의 FTA 현황, 주요 품목 관세율',
+
+    targets_2:'IV-2. 타겟 국가 2순위: '+targetCountry['targets_2']+' 심층 분석 (A4 3~4페이지 충분한 분량)\n'
+      +countryNote+'\n\n'
+      +'[H2] 국가 선정 배경 및 스코어링 근거\n'
+      +'- 왜 이 국가가 2순위인지 스코어링 항목별 점수와 함께 명확히 설명\n'
+      +'[H2] 시장 개요\n'
+      +'- 인구, GDP, 식품 수입 규모, K-Food 선호도 (구체적 수치)\n'
+      +'[H2] 수입 트렌드 분석\n'
+      +'- 최근 3년 수입 증감률 [TABLE]\n'
+      +'[H2] 유통 구조\n'
+      +'- 주요 유통 채널별 특성\n'
+      +'[H2] 현지 거래 가격대\n'
+      +'- '+cats+' 유사 품목 현지 가격대 [TABLE]\n'
+      +'[H2] 바이어 소싱 기준\n'
+      +'- 필수 인증, 패키징 요건, MOQ 기준\n'
+      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건\n':'')
+      +'[H2] FTA 및 관세 혜택',
+
+    targets_3:'IV-3. 타겟 국가 3순위: '+targetCountry['targets_3']+' 심층 분석 (A4 3~4페이지 충분한 분량)\n'
+      +countryNote+'\n\n'
+      +'[H2] 국가 선정 배경 및 스코어링 근거\n'
+      +'- 왜 이 국가가 3순위인지 스코어링 항목별 점수와 함께 명확히 설명\n'
+      +'[H2] 시장 개요\n'
+      +'- 인구, GDP, 식품 수입 규모, K-Food 선호도 (구체적 수치)\n'
+      +'[H2] 수입 트렌드 분석\n'
+      +'- 최근 3년 수입 증감률 [TABLE]\n'
+      +'[H2] 유통 구조\n'
+      +'- 주요 유통 채널별 특성\n'
+      +'[H2] 현지 거래 가격대\n'
+      +'- '+cats+' 유사 품목 현지 가격대 [TABLE]\n'
+      +'[H2] 바이어 소싱 기준\n'
+      +'- 필수 인증, 패키징 요건, MOQ 기준\n'
+      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건\n':'')
+      +'[H2] FTA 및 관세 혜택',
+
+    strategy:'V. Tridge B2B 플랫폼 활용 실전 수출 전략 (A4 5~6페이지 충분한 분량)\n'
+      +'[H2] 1. 디지털 쇼룸 구축 전략\n'
+      +'- Tridge 플랫폼 내 프로필 최적화 노하우\n'
+      +'[H2] 2. 타겟 바이어 페르소나 분석\n'
+      +'- 대형 유통사, 로컬 벤더, 식자재 마트 유형별 접근 전략\n'
+      +'[H2] 3. 프라이싱 전략\n'
+      +'- Tridge 실시간 가격 데이터 기반 마진율 계산'+(fob?' (희망 단가 '+fob+' 기준)':'')+(moq?', MOQ '+moq:'')+'\n'
+      +'[H2] 4. 첫 수출 성공을 위한 실전 팁\n'
+      +'- 샘플 발송 전략, 화상 미팅 준비, 계약서 체크리스트\n'
+      +(ark?'[H2] 5. Tridge Ark AI 에이전트 활용\n- 자동 바이어 매칭 프로세스 및 활용법\n':''),
+
+    roadmap:'VI. 실행 로드맵 & Action Plan (A4 3~4페이지 충분한 분량)\n'
+      +'[H2] 1단계: 준비기 (1~3개월)\n'
+      +'- 월별 세부 액션 아이템 (서류, 인증, 플랫폼 셋업) [TABLE]로 정리\n'
+      +'[H2] 2단계: 바이어 발굴 및 협상기 (4~6개월)\n'
+      +'- 월별 세부 액션 아이템 (첫 미팅, 샘플 발송, NDA 체결) [TABLE]로 정리\n'
+      +'[H2] 3단계: 첫 수출 달성 및 확장기 (7~12개월)\n'
+      +'- 월별 세부 액션 아이템 (첫 선적, 재계약, 신규 국가 확장) [TABLE]로 정리\n'
+      +'[H2] Tridge 제공 솔루션\n'
+      +'- 무역대행, 수출바우처지원사업, Ark 온보딩 단계별 활용 방법'
+  };
 
   return '당신은 Tridge(글로벌 농식품 무역 데이터 플랫폼) 수출전략 전문가입니다.\n'
     +'아래 기업 정보를 바탕으로 해외수출전략보고서의 지정 섹션을 작성하세요.\n\n'
     +'[기업 정보]\n'
     +'기업명: '+company+' / 지역: '+region+'\n'
     +'주력 제품: '+cats+' / 보유 인증: '+certs+'\n'
-    +'제품 상세: '+(prod||'미입력')+'\n페인포인트: '+(pain||'미입력')+'\n'
+    +'제품 상세: '+(prod||'미입력')+'\n'
+    +'페인포인트: '+(pain||'미입력')+'\n'
     +'데이터 소스: '+(dataMode==='none'?'웹서치 기반':dataMode==='tridge'?'Tridge 실거래 데이터':'Tridge + 웹서치 병행')+tdata+'\n\n'
     +'[작성 섹션]\n'+sections[sectionKey]+'\n\n'
     +'[출력 형식 - 반드시 준수]\n'
-    +'아래 구분자 태그만 사용하여 작성하세요. 마크다운(#,*,**,--)은 절대 사용 금지.\n\n'
-    +'사용 가능한 태그:\n'
-    +'[SUMMARY]이 섹션 핵심 요약 1~2문장[/SUMMARY]\n'
+    +'아래 구분자 태그만 사용하세요. 마크다운(#,*,**,--) 절대 사용 금지.\n'
+    +'"이제 보고서를 작성합니다", "다음과 같이 작성하겠습니다" 같은 AI 독백 문구 절대 금지.\n'
+    +'바로 내용부터 시작하세요.\n\n'
+    +'사용 태그:\n'
+    +'[SUMMARY]섹션 핵심 요약 1~2문장[/SUMMARY]\n'
     +'[H2]소제목[/H2]\n'
-    +'[PARA]본문 단락 (한 단락씩)[/PARA]\n'
-    +'[STAT]라벨|값|단위|up[/STAT] (수치 있을때만, trend: up/down/neutral)\n'
-    +'[INSIGHT]핵심 인사이트[/INSIGHT] (있을때만)\n'
-    +'[BULLET]불릿 항목[/BULLET] (여러개 가능)\n'
-    +'[TABLE]\n헤더1|헤더2|헤더3\n값1|값2|값3\n[/TABLE] (있을때만, 최소 3행)\n\n'
+    +'[PARA]본문 단락[/PARA]\n'
+    +'[STAT]라벨|값|단위|up[/STAT]\n'
+    +'[INSIGHT]핵심 인사이트[/INSIGHT]\n'
+    +'[BULLET]불릿 항목[/BULLET]\n'
+    +'[TABLE]\n헤더1|헤더2|헤더3\n값1|값2|값3\n[/TABLE]\n\n'
     +'[작성 지침]\n'
     +'언어: '+langStr+'\n'
-    +'구체적 수치와 데이터 근거를 반드시 포함하세요\n'
-    +'비대립적, 해결책 중심 프레이밍\n'
-    +'해당 섹션 내용만 작성하세요';
+    +'각 소제목 아래 반드시 충분한 본문 내용([PARA] 또는 [BULLET] 또는 [TABLE])을 작성하세요. 소제목만 있고 내용이 없으면 안됩니다.\n'
+    +'구체적 수치, 연도, 통계를 반드시 포함하세요.\n'
+    +'비대립적, 해결책 중심 프레이밍.\n'
+    +'해당 섹션 내용만 작성하세요.';
 }
 
 
@@ -702,7 +823,7 @@ async function callAI(prompt, retry=0){
   if(selModel==='claude'){
     const key=document.getElementById('claudeKey').value;
     if(!key) throw new Error('Anthropic API 키를 입력해주세요.');
-    const body={model:'claude-sonnet-4-6',max_tokens:4000,messages:[{role:'user',content:prompt}]};
+    const body={model:'claude-sonnet-4-6',max_tokens:8000,messages:[{role:'user',content:prompt}]};
     if(dataMode!=='tridge') body.tools=[{type:'web_search_20250305',name:'web_search'}];
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -1307,7 +1428,17 @@ function downloadHtml(){
   var exportExp=document.getElementById('exportExp').value||'-';
   var exportGoal=document.getElementById('exportGoal').value||'-';
   var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
-  var SECTION_NUMS=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ'];
+  var SECTION_NUMS=['Ⅰ','Ⅱ','Ⅲ','Ⅳ-1','Ⅳ-2','Ⅳ-3','Ⅴ','Ⅵ'];
+  var TOC_DESCS={
+    executive:'보고서 목적 · 글로벌 성공 가능성 · 핵심 타겟 국가 요약',
+    diagnosis:'제주 프리미엄 가치 · 글로벌 트렌드 부합성 · 준비 필요 영역',
+    kfood:'최근 3년 수출입 변화 · 바이어 검색 트렌드 · 경쟁 지역 비교',
+    targets_1:'1순위 국가 선정 근거 · 시장 개요 · 수입 트렌드 · 유통 구조 · 바이어 기준',
+    targets_2:'2순위 국가 선정 근거 · 시장 개요 · 수입 트렌드 · 유통 구조 · 바이어 기준',
+    targets_3:'3순위 국가 선정 근거 · 시장 개요 · 수입 트렌드 · 유통 구조 · 바이어 기준',
+    strategy:'Ark AI · 디지털 쇼룸 · 바이어 페르소나 · 프라이싱 가이드',
+    roadmap:'3단계 타임라인 · Tridge 솔루션 · 수출바우처 연계'
+  };
 
   function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -1394,9 +1525,10 @@ function downloadHtml(){
       +'<span class="nav-section">'+num+' · '+escHtml(sname)+'</span>'
       +'<div class="nav-right"><span class="nav-logo">tridge<em>.</em></span><span class="nav-page">p. '+(idx+3)+'</span></div>'
       +'</div>'
-      +'<div class="section-eyebrow">'+escHtml(sname.toUpperCase())+'</div>'
+      +'<div class="section-eyebrow">'+escHtml(num)+' · SECTION</div>'
       +'<div class="section-h">'+escHtml(sname)+'</div>'
-      +''+bodyHtml
+      +'<div style="height:1px;background:#e4e4e0;margin-bottom:22px"></div>'
+      +bodyHtml
       +'</div>'
       +'<div class="footer-bar"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge. All rights reserved.</span></div>'
       +'</div>';
@@ -1405,17 +1537,12 @@ function downloadHtml(){
   // 목차 생성
   var tocRows=SECTION_KEYS.map(function(key,idx){
     var num=SECTION_NUMS[idx];
-    var isMain=(idx===3);
+    var isMain=(key==='targets_1'||key==='targets_2'||key==='targets_3');
     return '<div class="toc-row">'
       +'<div class="toc-idx'+(isMain?' hl':'')+'">'+num+'</div>'
       +'<div class="toc-body">'
-      +'<div class="toc-title'+(isMain?' hl':'')+'">'+(isMain?'★ ':'')+escHtml(SECTION_NAMES[key])+(isMain?' ★':'')+'</div>'
-      +'<div class="toc-desc">'+escHtml(['보고서 목적 · 글로벌 성공 가능성 · 핵심 타겟 국가',
-        '제주 프리미엄 가치 · 물류비 분석 · 트릿지 솔루션',
-        '최근 3년 수출입 변화 · 바이어 검색 트렌드 · 경쟁 지역',
-        '스코어링 방법론 · 타겟 국가 수입 트렌드 · 현지 거래가 · 바이어 소싱 기준',
-        'Ark AI · 디지털 쇼룸 · 바이어 페르소나 · 프라이싱 가이드',
-        '3단계 타임라인 · 트릿지 지원 솔루션 · 수출바우처 연계'][idx])+'</div>'
+      +'<div class="toc-title'+(isMain?' hl':'')+'">'+escHtml(SECTION_NAMES[key])+'</div>'
+      +'<div class="toc-desc">'+escHtml(TOC_DESCS[key]||'')+'</div>'
       +'</div>'
       +'<div class="toc-pg">'+(idx+3)+'</div>'
       +'</div>';
@@ -1476,7 +1603,7 @@ function downloadHtml(){
     +'*{box-sizing:border-box;margin:0;padding:0}\n'
     +'body{font-family:"Apple SD Gothic Neo","맑은 고딕","Malgun Gothic",Arial,sans-serif;background:#EDECEA}\n'
     +'.a4-wrap{width:100%;display:flex;flex-direction:column;align-items:center;gap:32px;padding:32px 16px 48px;background:#EDECEA}\n'
-    +'.a4{width:794px;min-height:1123px;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.13);border-radius:3px;position:relative;display:flex;flex-direction:column;overflow:hidden}\n'
+    +'.a4{width:794px;min-height:1123px;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.13);border-radius:3px;position:relative;display:flex;flex-direction:column;overflow:visible}\n'
     +'.cover{background:#0B2D4E;min-height:1123px}\n'
     +'.cover-header{padding:40px 56px 0;display:flex;justify-content:space-between;align-items:center}\n'
     +'.cover-logo{font-size:17px;font-weight:700;color:#fff;letter-spacing:0.1em}\n'
