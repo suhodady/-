@@ -969,58 +969,47 @@ function buildPrompt(sectionKey){
       +'[H2] 4. '+cats+' 카테고리 글로벌 가격 동향\n'
       +'- 주요 수출국별 도매 가격대 비교',
 
-    targets_1:'IV-1. 타겟 국가 1순위: '+targetCountry['targets_1']+' 심층 분석 (A4 3~4페이지 충분한 분량)\n'
+    targets_1:'IV-1. 타겟 국가 1순위: '+targetCountry['targets_1']+' 심층 분석 (A4 2페이지 분량)\n'
       +countryNote+'\n\n'
-      +'[H2] 국가 선정 배경 및 스코어링 근거\n'
-      +'- 왜 이 국가가 1순위인지 스코어링 항목별 점수와 함께 명확히 설명\n'
-      +'- 수입성장률, FTA혜택, K-Food인지도, 진입장벽 항목별 분석\n'
+      +'[H2] 국가 선정 배경\n'
+      +'- 스코어링 항목별 점수와 함께 1순위 선정 이유 명확히 설명\n'
       +'[H2] 시장 개요\n'
       +'- 인구, GDP, 식품 수입 규모, K-Food 선호도 (구체적 수치)\n'
-      +'[H2] 수입 트렌드 분석\n'
-      +'- 최근 3년 수입 증감률, 주요 수입 카테고리 [TABLE]\n'
-      +'[H2] 유통 구조\n'
-      +'- 주요 유통 채널별 특성 (대형마트, 온라인, 로컬 벤더 등)\n'
-      +'[H2] 현지 거래 가격대\n'
-      +'- '+cats+' 유사 품목 현지 도매/소매 가격대 [TABLE]\n'
-      +'[H2] 바이어 소싱 기준\n'
-      +'- 필수 인증, 패키징 요건, MOQ 기준\n'
-      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건 (구체적 수치 포함)\n':'')
+      +'[H2] 수입 트렌드 & 유통 구조\n'
+      +'- 최근 3년 수입 증감률, 주요 유통 채널 [TABLE]\n'
+      +'[H2] 현지 가격대 & 바이어 소싱 기준\n'
+      +'- '+cats+' 현지 도매/소매 가격대, 필수 인증, MOQ [TABLE]\n'
       +'[H2] FTA 및 관세 혜택\n'
-      +'- 한국과의 FTA 현황, 주요 품목 관세율',
+      +'- 한국과의 FTA 현황, 주요 품목 관세율\n'
+      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건 (수치 포함)\n':''),
 
-    targets_2:'IV-2. 타겟 국가 2순위: '+targetCountry['targets_2']+' 심층 분석 (A4 3~4페이지 충분한 분량)\n'
+    targets_2:'IV-2. 타겟 국가 2순위: '+targetCountry['targets_2']+' 심층 분석 (A4 2페이지 분량)\n'
       +countryNote+'\n\n'
-      +'[H2] 국가 선정 배경 및 스코어링 근거\n'
-      +'- 왜 이 국가가 2순위인지 스코어링 항목별 점수와 함께 명확히 설명\n'
+      +'[H2] 국가 선정 배경\n'
+      +'- 스코어링 항목별 점수와 함께 2순위 선정 이유 명확히 설명\n'
       +'[H2] 시장 개요\n'
       +'- 인구, GDP, 식품 수입 규모, K-Food 선호도 (구체적 수치)\n'
-      +'[H2] 수입 트렌드 분석\n'
-      +'- 최근 3년 수입 증감률 [TABLE]\n'
-      +'[H2] 유통 구조\n'
-      +'- 주요 유통 채널별 특성\n'
-      +'[H2] 현지 거래 가격대\n'
-      +'- '+cats+' 유사 품목 현지 가격대 [TABLE]\n'
-      +'[H2] 바이어 소싱 기준\n'
-      +'- 필수 인증, 패키징 요건, MOQ 기준\n'
-      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건\n':'')
-      +'[H2] FTA 및 관세 혜택',
+      +'[H2] 수입 트렌드 & 유통 구조\n'
+      +'- 최근 3년 수입 증감률, 주요 유통 채널 [TABLE]\n'
+      +'[H2] 현지 가격대 & 바이어 소싱 기준\n'
+      +'- '+cats+' 현지 도매/소매 가격대, 필수 인증, MOQ [TABLE]\n'
+      +'[H2] FTA 및 관세 혜택\n'
+      +'- 한국과의 FTA 현황, 주요 품목 관세율\n'
+      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건\n':''),
 
-    targets_3:'IV-3. 타겟 국가 3순위: '+targetCountry['targets_3']+' 심층 분석 (A4 3~4페이지 충분한 분량)\n'
+    targets_3:'IV-3. 타겟 국가 3순위: '+targetCountry['targets_3']+' 심층 분석 (A4 2페이지 분량)\n'
       +countryNote+'\n\n'
-      +'[H2] 국가 선정 배경 및 스코어링 근거\n'
-      +'- 왜 이 국가가 3순위인지 스코어링 항목별 점수와 함께 명확히 설명\n'
+      +'[H2] 국가 선정 배경\n'
+      +'- 스코어링 항목별 점수와 함께 3순위 선정 이유 명확히 설명\n'
       +'[H2] 시장 개요\n'
       +'- 인구, GDP, 식품 수입 규모, K-Food 선호도 (구체적 수치)\n'
-      +'[H2] 수입 트렌드 분석\n'
-      +'- 최근 3년 수입 증감률 [TABLE]\n'
-      +'[H2] 유통 구조\n'
-      +'- 주요 유통 채널별 특성\n'
-      +'[H2] 현지 거래 가격대\n'
-      +'- '+cats+' 유사 품목 현지 가격대 [TABLE]\n'
-      +'[H2] 바이어 소싱 기준\n'
-      +'- 필수 인증, 패키징 요건, MOQ 기준\n'
-      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건\n':'')
-      +'[H2] FTA 및 관세 혜택',
+      +'[H2] 수입 트렌드 & 유통 구조\n'
+      +'- 최근 3년 수입 증감률, 주요 유통 채널 [TABLE]\n'
+      +'[H2] 현지 가격대 & 바이어 소싱 기준\n'
+      +'- '+cats+' 현지 도매/소매 가격대, 필수 인증, MOQ [TABLE]\n'
+      +'[H2] FTA 및 관세 혜택\n'
+      +'- 한국과의 FTA 현황, 주요 품목 관세율\n'
+      +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건\n':''),
 
     strategy:'V. Tridge B2B 플랫폼 활용 실전 수출 전략 (A4 5~6페이지 충분한 분량)\n'
       +'[H2] 1. 디지털 쇼룸 구축 전략\n'
@@ -1116,12 +1105,32 @@ function parseDelimiters(raw){
   const result={summary:'',subsections:[]};
   let current={heading:'',paragraphs:[],bullets:[],stats:[],tables:[],insight:''};
 
+  // 대소문자 정규화 — AI가 소문자로 출력하는 경우 대응
+  const norm=raw
+    .replace(/\[\/para\]/gi,'[/PARA]').replace(/\[para\]/gi,'[PARA]')
+    .replace(/\[\/h2\]/gi,'[/H2]').replace(/\[h2\]/gi,'[H2]')
+    .replace(/\[\/bullet\]/gi,'[/BULLET]').replace(/\[bullet\]/gi,'[BULLET]')
+    .replace(/\[\/stat\]/gi,'[/STAT]').replace(/\[stat\]/gi,'[STAT]')
+    .replace(/\[\/insight\]/gi,'[/INSIGHT]').replace(/\[insight\]/gi,'[INSIGHT]')
+    .replace(/\[\/summary\]/gi,'[/SUMMARY]').replace(/\[summary\]/gi,'[SUMMARY]')
+    .replace(/\[\/table\]/gi,'[/TABLE]').replace(/\[table\]/gi,'[TABLE]');
+
+  // 미닫힌 태그 자동 닫기 (토큰 잘림 대응)
+  const autoClose=(s,tag)=>{
+    const opens=(s.match(new RegExp('\\['+tag+'\\]','g'))||[]).length;
+    const closes=(s.match(new RegExp('\\[/'+tag+'\\]','g'))||[]).length;
+    if(opens>closes) return s+('[/'+tag+']').repeat(opens-closes);
+    return s;
+  };
+  let fixed=norm;
+  ['PARA','H2','BULLET','STAT','INSIGHT','TABLE'].forEach(t=>{fixed=autoClose(fixed,t);});
+
   // SUMMARY 추출
-  const summaryM=raw.match(/\[SUMMARY\]([\s\S]*?)\[\/SUMMARY\]/);
+  const summaryM=fixed.match(/\[SUMMARY\]([\s\S]*?)\[\/SUMMARY\]/);
   if(summaryM) result.summary=summaryM[1].trim();
 
   // H2 기준으로 분할
-  const parts=raw.split(/(?=\[H2\])/);
+  const parts=fixed.split(/(?=\[H2\])/);
   parts.forEach(part=>{
     if(!part.trim()) return;
     const h2M=part.match(/\[H2\]([\s\S]*?)\[\/H2\]/);
