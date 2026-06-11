@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 <script src="docx.min.js"></script>
 <script src="mammoth.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     --blue:#185FA5;--blue-light:#E6F1FB;--blue-dark:#0C447C;
@@ -648,12 +649,163 @@ function handleTridge(files){
   for(const f of files){
     const item=document.createElement('div');
     item.className='fitem';
-    item.innerHTML=`<i class="ti ti-table"></i><span>${f.name}</span>
-      <span class="rm" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></span>`;
+    item.id='fitem_tridge_'+Date.now();
+    item.innerHTML='<i class="ti ti-table"></i><span>'+f.name+'</span>'
+      +'<span style="margin-left:6px;font-size:10px;color:#185FA5" id="parse_status_'+item.id+'">분석 중...</span>'
+      +'<span class="rm" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></span>';
     list.appendChild(item);
-    const r=new FileReader();
-    r.onload=e=>{tridgeData+=`\n[${f.name}]\n`+e.target.result.substring(0,2000);};
-    r.readAsText(f);
+
+    const reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        const statusEl=item.querySelector('[id^="parse_status"]');
+        let rows=[];
+
+        // CSV vs Excel 분기
+        if(f.name.endsWith('.csv')){
+          const text=e.target.result;
+          const lines=text.split('\n').filter(l=>l.trim());
+          const headers=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+          for(let i=1;i<lines.length;i++){
+            const vals=lines[i].split(',').map(v=>v.trim().replace(/"/g,''));
+            const row={};
+            headers.forEach((h,idx)=>{row[h]=vals[idx]||'';});
+            rows.push(row);
+          }
+        } else {
+          // Excel — SheetJS 사용
+          if(typeof XLSX==='undefined'){
+            if(statusEl) statusEl.textContent='⚠️ 라이브러리 로딩 중, 잠시 후 재시도';
+            tridgeData+='['+f.name+'] 분석 실패 — 페이지 새로고침 후 다시 시도해주세요\n';
+            return;
+          }
+          const data=new Uint8Array(e.target.result);
+          const wb=XLSX.read(data,{type:'array'});
+          const ws=wb.Sheets[wb.SheetNames[0]];
+          rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        }
+
+        if(!rows.length){
+          if(statusEl) statusEl.textContent='⚠️ 데이터 없음';
+          return;
+        }
+
+        // 컬럼 매핑 (대소문자 무관)
+        const firstRow=rows[0];
+        const keys=Object.keys(firstRow);
+        function findCol(candidates){
+          for(const c of candidates){
+            const found=keys.find(k=>k.toLowerCase().includes(c.toLowerCase()));
+            if(found) return found;
+          }
+          return null;
+        }
+        const COL_DATE=findCol(['Date','날짜']);
+        const COL_IMPORT=findCol(['Import Country','수입국']);
+        const COL_EXPORT=findCol(['Export Country','수출국']);
+        const COL_ORIGIN=findCol(['Origin Country','원산지']);
+        const COL_PRODUCT=findCol(['Reported Product Name','Product Name','품목']);
+        const COL_VALUE=findCol(['Value','금액']);
+        const COL_VOLUME=findCol(['Volume','수량']);
+        const COL_UNIT_PRICE=findCol(['Unit Price','단가']);
+        const COL_UNIT=findCol(['Unit','단위']);
+        const COL_IMPORTER=findCol(['Importer','수입업체']);
+        const COL_EXPORTER=findCol(['Exporter','수출업체']);
+
+        // 유효 데이터 필터링
+        const valid=rows.filter(r=>{
+          const price=parseFloat(r[COL_UNIT_PRICE]);
+          const vol=parseFloat(r[COL_VOLUME]);
+          return price>0&&vol>0&&!isNaN(price)&&!isNaN(vol);
+        });
+
+        if(!valid.length){
+          if(statusEl) statusEl.textContent='⚠️ 유효 데이터 없음';
+          tridgeData+='['+f.name+'] 유효한 가격/수량 데이터 없음\n';
+          return;
+        }
+
+        // IQR 이상치 제거 (5th~95th percentile)
+        const prices=valid.map(r=>parseFloat(r[COL_UNIT_PRICE])).sort((a,b)=>a-b);
+        const p5=prices[Math.floor(prices.length*0.05)];
+        const p95=prices[Math.floor(prices.length*0.95)];
+        const cleaned=valid.filter(r=>{
+          const p=parseFloat(r[COL_UNIT_PRICE]);
+          return p>=p5&&p<=p95;
+        });
+
+        // 국가별 분석
+        const byCountry={};
+        cleaned.forEach(function(r){
+          const country=r[COL_IMPORT_COUNTRY]||r[COL_IMPORT]||r[COL_EXPORT]||'Unknown';
+          if(!byCountry[country]) byCountry[country]={vol:0,val:0,count:0,importers:new Set()};
+          const vol=parseFloat(r[COL_VOLUME])||0;
+          const price=parseFloat(r[COL_UNIT_PRICE])||0;
+          byCountry[country].vol+=vol;
+          byCountry[country].val+=vol*price;
+          byCountry[country].count++;
+          if(r[COL_IMPORTER]) byCountry[country].importers.add(r[COL_IMPORTER]);
+        });
+
+        // 연도별 분석
+        const byYear={};
+        cleaned.forEach(function(r){
+          const date=r[COL_DATE]||'';
+          const year=String(date).substring(0,4);
+          if(!year||isNaN(year)) return;
+          if(!byYear[year]) byYear[year]={vol:0,val:0};
+          const vol=parseFloat(r[COL_VOLUME])||0;
+          const price=parseFloat(r[COL_UNIT_PRICE])||0;
+          byYear[year].vol+=vol;
+          byYear[year].val+=vol*price;
+        });
+
+        // 상위 수입국 TOP 5
+        const countryRanked=Object.entries(byCountry)
+          .map(([c,d])=>({country:c,vol:d.vol,vwap:d.val/d.vol,count:d.count,importers:d.importers.size}))
+          .sort((a,b)=>b.vol-a.vol)
+          .slice(0,5);
+
+        // 연도별 트렌드
+        const yearTrend=Object.entries(byYear)
+          .sort((a,b)=>a[0].localeCompare(b[0]))
+          .map(([y,d])=>y+': '+Math.round(d.vol).toLocaleString()+'kg / VWAP $'+(d.val/d.vol).toFixed(2)+'/kg');
+
+        // 전체 VWAP
+        const totalVol=cleaned.reduce((s,r)=>s+(parseFloat(r[COL_VOLUME])||0),0);
+        const totalVal=cleaned.reduce((s,r)=>s+(parseFloat(r[COL_VOLUME])||0)*(parseFloat(r[COL_UNIT_PRICE])||0),0);
+        const globalVWAP=(totalVal/totalVol).toFixed(2);
+
+        // 요약 생성
+        const summary='[Tridge 실거래 데이터 분석: '+f.name+']\n'
+          +'총 거래 건수: '+valid.length+'건 (이상치 제거 후 '+cleaned.length+'건)\n'
+          +'전체 VWAP: $'+globalVWAP+'/kg\n'
+          +'가격 범위: $'+p5.toFixed(2)+' ~ $'+p95.toFixed(2)+'/kg\n\n'
+          +'[국가별 수출 현황 TOP 5]\n'
+          +countryRanked.map(function(c){
+            return '· '+c.country+': '+Math.round(c.vol).toLocaleString()+'kg'
+              +', VWAP $'+c.vwap.toFixed(2)+'/kg'
+              +', '+c.count+'건, 바이어 '+c.importers+'개사';
+          }).join('\n')+'\n\n'
+          +'[연도별 수출 트렌드]\n'
+          +yearTrend.join('\n')+'\n'
+          +'※ 이 데이터는 신고된 거래 기반이며, 웹서치 시장조사와 교차 검증하여 일치하는 내용만 보고서에 반영하세요.';
+
+        tridgeData+='\n'+summary+'\n';
+        if(statusEl) statusEl.textContent='✅ '+cleaned.length+'건 분석 완료';
+        console.log('Tridge 분석 완료:\n'+summary);
+
+      } catch(err){
+        console.error('Tridge 파싱 오류:', err);
+        const statusEl=item.querySelector('[id^="parse_status"]');
+        if(statusEl) statusEl.textContent='⚠️ 파싱 오류: '+err.message;
+        tridgeData+='['+f.name+'] 파싱 오류 — 원시 데이터 참고\n';
+      }
+    };
+
+    // CSV는 텍스트, Excel은 ArrayBuffer
+    if(f.name.endsWith('.csv')) reader.readAsText(f);
+    else reader.readAsArrayBuffer(f);
   }
 }
 
@@ -684,7 +836,11 @@ function buildPrompt(sectionKey){
   const lang=document.getElementById('reportLang').value;
   const cs=document.getElementById('caseStudy').value==='yes';
   const ark=document.getElementById('arkSection').value==='yes';
-  const tdata=tridgeData?'\n[Tridge 거래 데이터]\n'+tridgeData.substring(0,2000):'';
+  const tdata=tridgeData
+    ?'\n\n[Tridge 실거래 데이터 — 교차 검증용]\n'
+      +tridgeData
+      +'\n※ 위 데이터는 신고된 거래만 포함된 참고 자료입니다. 웹서치 시장조사 결과와 방향이 일치하는 내용만 보고서에 반영하고, 불일치 시 웹서치 결과를 우선하되 Tridge 데이터를 보조 근거로 언급하세요. 데이터가 없는 항목은 웹서치로 대체하세요.'
+    :'';
   const langStr=lang==='ko'?'한국어':lang==='en'?'영어':'한국어 (주요 용어 영문 병기)';
 
   // 타겟 국가 결정
