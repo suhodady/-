@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tridge 해외수출전략보고서 생성기 v3</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<script src="docx.min.js"></script>
+<script src="mammoth.min.js"></script>
+<style>
+  :root {
+    --blue:#185FA5;--blue-light:#E6F1FB;--blue-dark:#0C447C;
+    --green:#1D9E75;--green-light:#E1F5EE;
+    --red:#E24B4A;--amber-light:#FAEEDA;--amber-text:#633806;
+    --gray-bg:#F8F8F6;--gray-border:rgba(0,0,0,0.12);--gray-text:#888780;
+    --text:#1a1a1a;--text-muted:#5F5E5A;
+    --radius:8px;--radius-lg:12px;--shadow:0 1px 3px rgba(0,0,0,0.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--gray-bg);color:var(--text);min-height:100vh}
+  .header{background:#fff;border-bottom:1px solid var(--gray-border);padding:0 2rem;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+  .logo{font-size:15px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:6px}
+  .logo span{color:var(--text-muted);font-weight:400;font-size:13px;margin-left:4px}
+  .container{max-width:760px;margin:0 auto;padding:2rem 1.5rem}
+  .step-bar{display:flex;align-items:center;margin-bottom:2rem;background:#fff;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;box-shadow:var(--shadow);border:1px solid var(--gray-border)}
+  .si{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;position:relative}
+  .si:not(:last-child)::after{content:'';position:absolute;top:14px;left:60%;width:80%;height:1px;background:var(--gray-border);z-index:0}
+  .sn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--gray-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:#fff;color:var(--gray-text);z-index:1;transition:all .2s}
+  .sn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .sn.dn{background:var(--green);border-color:var(--green);color:#fff}
+  .sl{font-size:11px;color:var(--gray-text);white-space:nowrap;font-weight:500}
+  .sl.on{color:var(--blue)}
+  .card{background:#fff;border:1px solid var(--gray-border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+  .card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:7px}
+  .card-title i{font-size:16px;color:var(--blue)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .row1{margin-bottom:12px}
+  .fg{display:flex;flex-direction:column;gap:4px}
+  label{font-size:12px;color:var(--text-muted);font-weight:500}
+  input[type=text],input[type=password],select,textarea{width:100%;border:1px solid var(--gray-border);border-radius:var(--radius);padding:9px 11px;font-size:13px;color:var(--text);background:#fff;font-family:inherit;transition:border-color .15s}
+  input[type=text]:focus,input[type=password]:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,0.08)}
+  textarea{resize:vertical;min-height:80px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+  .tag{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border:1px solid var(--gray-border);border-radius:20px;font-size:12px;cursor:pointer;color:var(--text-muted);background:#fff;transition:all .15s;user-select:none;font-weight:500}
+  .tag:hover{border-color:var(--blue);color:var(--blue)}
+  .tag.on{background:var(--blue-light);border-color:var(--blue);color:var(--blue-dark)}
+  .tag input{display:none}
+  .upload-z{border:1.5px dashed var(--gray-border);border-radius:var(--radius);padding:1.75rem 1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-bg)}
+  .upload-z:hover{border-color:var(--blue);background:var(--blue-light)}
+  .upload-z i{font-size:32px;color:var(--gray-text);display:block;margin-bottom:8px}
+  .up-title{font-size:13px;font-weight:600;color:var(--text-muted)}
+  .up-sub{font-size:11px;color:var(--gray-text);margin-top:4px}
+  .fitem{display:flex;align-items:center;gap:8px;padding:7px 11px;background:var(--green-light);border-radius:var(--radius);font-size:12px;color:#085041;margin-top:6px;border:1px solid #9FE1CB}
+  .fitem i{color:var(--green);font-size:14px}
+  .fitem .rm{margin-left:auto;cursor:pointer;color:var(--gray-text);font-size:13px}
+  .fitem .rm:hover{color:var(--red)}
+  .ibox{display:flex;gap:9px;padding:10px 12px;background:var(--blue-light);border-radius:var(--radius);font-size:12px;color:var(--blue-dark);margin-top:10px;border:1px solid #B5D4F4}
+  .ibox i{font-size:14px;flex-shrink:0;margin-top:1px}
+  .wbox{display:flex;gap:9px;padding:10px 12px;background:var(--amber-light);border-radius:var(--radius);font-size:12px;color:var(--amber-text);margin-top:10px;border:1px solid #FAC775}
+  .wbox i{font-size:14px;flex-shrink:0;margin-top:1px}
+  /* API key card highlight */
+  .api-card{border-color:var(--blue)!important;background:linear-gradient(135deg,#fff 0%,var(--blue-light) 100%)}
+  .api-card .card-title{color:var(--blue)}
+  .model-tabs{display:flex;gap:8px;margin-bottom:14px}
+  .mtab{flex:1;padding:10px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;text-align:center;color:var(--text-muted);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;background:#fff}
+  .mtab:hover{border-color:var(--blue);color:var(--blue)}
+  .mtab.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue-dark)}
+  .api-panel{display:none}.api-panel.on{display:block}
+  .btn-row{display:flex;justify-content:flex-end;gap:8px;margin-top:1.25rem}
+  .btn{padding:9px 20px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--gray-border);background:#fff;color:var(--text);transition:all .15s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+  .btn:hover{background:var(--gray-bg)}
+  .btn.p{background:var(--blue);border-color:var(--blue);color:#fff}
+  .btn.p:hover{background:var(--blue-dark)}
+  .btn.sm{padding:5px 12px;font-size:12px}
+  .btn.full{width:100%;justify-content:center}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .page{display:none}.page.act{display:block}
+  .radio-g{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+  .ri{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1px solid var(--gray-border);border-radius:var(--radius);cursor:pointer;transition:all .15s}
+  .ri:hover{border-color:var(--blue)}
+  .ri.on{border-color:var(--blue);background:var(--blue-light)}
+  .ri input{margin-top:3px;flex-shrink:0;accent-color:var(--blue)}
+  .rl{font-size:13px;font-weight:600;color:var(--text)}
+  .rs{font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.5}
+  .srow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--gray-border)}
+  .srow:last-child{border-bottom:none}
+  .slbl{font-size:13px;color:var(--text);font-weight:500}
+  .ssub{font-size:11px;color:var(--text-muted);margin-top:2px}
+  .sum-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-border);font-size:13px}
+  .sum-row:last-child{border-bottom:none}
+  .sum-k{color:var(--text-muted);min-width:100px;flex-shrink:0;font-weight:500}
+  .sum-v{color:var(--text)}
+  .prog{display:flex;align-items:center;gap:10px;padding:10px 0;font-size:13px;color:var(--text-muted);border-bottom:1px solid var(--gray-border)}
+  .prog:last-child{border-bottom:none}
+  .spin{width:18px;height:18px;border:2px solid var(--blue-light);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+  .sec-block{border:1px solid var(--gray-border);border-radius:var(--radius-lg);margin-bottom:1rem;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+  .sec-hd{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--gray-bg);border-bottom:1px solid var(--gray-border)}
+  .sec-title{font-size:13px;font-weight:700;color:var(--text)}
+  .sec-body{padding:1.25rem;font-size:13px;line-height:1.85;color:var(--text);white-space:pre-wrap;max-height:340px;overflow-y:auto}
+  .sec-edit{padding:1rem 1.25rem;background:var(--blue-light);border-top:1px solid #B5D4F4;display:none}
+  .sec-edit textarea{background:#fff;margin-bottom:8px}
+  .erow{display:flex;gap:7px;justify-content:flex-end}
+  .dl-row{display:flex;gap:10px;margin-top:.5rem}
+  .dl-btn{flex:1;padding:14px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;text-align:center;color:var(--text-muted);background:#fff;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+  .dl-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);box-shadow:var(--shadow)}
+  .dl-btn i{font-size:22px}
+  .dl-btn.word i{color:var(--blue)}
+  .dl-btn.pdf i{color:var(--red)}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+  .badge.auto{background:var(--green-light);color:#085041;border:1px solid #9FE1CB}
+  .badge.rec{background:var(--blue-light);color:var(--blue-dark);border:1px solid #B5D4F4}
+  .report-header{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem;color:#fff}
+  .report-header h2{font-size:18px;font-weight:700;margin-bottom:4px}
+  .report-header p{font-size:12px;opacity:.75}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:560px){.row2{grid-template-columns:1fr}.dl-row{flex-direction:column}.container{padding:1rem}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <i class="ti ti-world-upload"></i>
+    Tridge Export Report
+    <span>해외수출전략보고서 생성기</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="step-bar" id="stepBar">
+    <div class="si"><div class="sn on" id="sn1">1</div><span class="sl on" id="sl1">기업 정보</span></div>
+    <div class="si"><div class="sn" id="sn2">2</div><span class="sl" id="sl2">데이터</span></div>
+    <div class="si"><div class="sn" id="sn3">3</div><span class="sl" id="sl3">설정</span></div>
+    <div class="si"><div class="sn" id="sn4">4</div><span class="sl" id="sl4">생성</span></div>
+  </div>
+
+  <!-- ===== STEP 1 ===== -->
+  <div class="page act" id="page1">
+
+    <!-- API 키 (Step 1 최상단) -->
+    <div class="card api-card">
+      <div class="card-title"><i class="ti ti-key"></i>AI 모델 & API 키 설정</div>
+      <div class="model-tabs">
+        <div class="mtab on" id="mt_claude" onclick="setModel('claude')">
+          <i class="ti ti-brand-anthropic"></i> Claude (Anthropic)
+        </div>
+        <div class="mtab" id="mt_gemini" onclick="setModel('gemini')">
+          <i class="ti ti-sparkles"></i> Gemini (Google)
+        </div>
+      </div>
+      <div class="api-panel on" id="ap_claude">
+        <div class="fg">
+          <label>Anthropic API 키</label>
+          <input type="password" id="claudeKey" placeholder="sk-ant-api03-...">
+        </div>
+      </div>
+      <div class="api-panel" id="ap_gemini">
+        <div class="row2">
+          <div class="fg">
+            <label>Google AI API 키</label>
+            <input type="password" id="geminiKey" placeholder="AIzaSy...">
+          </div>
+          <div class="fg">
+            <label>Gemini 모델</label>
+            <select id="geminiModel">
+              <option value="gemini-2.0-flash">gemini-2.0-flash (빠름)</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro (고품질)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="wbox"><i class="ti ti-lock"></i>API 키는 브라우저 내에서만 사용되며 외부에 저장되지 않습니다. 페이지를 닫으면 사라집니다.</div>
+    </div>
+
+    <!-- 파일 업로드 -->
+    <div class="card">
+      <div class="card-title">
+        <i class="ti ti-file-upload"></i>
+        회사 소개서 / 제품 카탈로그 업로드
+        <span class="badge auto">자동 분석</span>
+      </div>
+      <div class="upload-z" id="docZone" onclick="document.getElementById('docInput').click()"
+           ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+           ondragleave="this.style.borderColor=''"
+           ondrop="event.preventDefault();this.style.borderColor='';handleDocUpload(event.dataTransfer.files)">
+        <i class="ti ti-file-description"></i>
+        <div class="up-title">PDF · DOCX · TXT 파일 업로드</div>
+        <div class="up-sub">PDF / TXT 권장 — DOCX도 지원 (텍스트 자동 추출)</div>
+      </div>
+      <input type="file" id="docInput" accept=".pdf,.docx,.doc,.txt" style="display:none" onchange="handleDocUpload(this.files)">
+      <div id="docList"></div>
+      <div id="analyzeBtn" style="display:none;margin-top:10px">
+        <button class="btn p full" id="analyzeBtnEl" onclick="analyzeDoc()">
+          <div class="spin" id="analyzeSpin" style="display:none;border-color:rgba(255,255,255,.3);border-top-color:#fff;width:15px;height:15px;border-width:2px"></div>
+          <i class="ti ti-sparkles" id="analyzeIcon"></i>
+          <span id="analyzeLbl">문서 분석하여 자동 입력</span>
+        </button>
+      </div>
+      <div class="ibox"><i class="ti ti-info-circle"></i>파일이 없어도 아래에서 직접 입력할 수 있습니다. PDF · DOCX 모두 지원합니다.</div>
+    </div>
+
+    <!-- 기업 기본 정보 -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-building"></i>기업 기본 정보</div>
+      <div class="row2">
+        <div class="fg"><label>기업명 *</label><input type="text" id="companyName" placeholder="예: 제주감귤영농조합법인"></div>
+        <div class="fg"><label>담당자명</label><input type="text" id="contactName" placeholder="예: 홍길동 팀장"></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>지자체 / 지역 *</label><input type="text" id="region" placeholder="예: 제주특별자치도"></div>
+        <div class="fg"><label>연간 매출 규모</label>
+          <select id="revenue">
+            <option value="">선택</option>
+            <option>5억 미만</option><option>5억~20억</option>
+            <option>20억~100억</option><option>100억 이상</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>현재 수출 실적</label>
+          <select id="exportExp">
+            <option value="">선택</option>
+            <option>수출 경험 없음</option><option>소규모 시범 수출</option>
+            <option>연간 1억 미만</option><option>연간 1억~10억</option><option>연간 10억 이상</option>
+          </select>
+        </div>
+        <div class="fg"><label>수출 목표 (연간)</label><input type="text" id="exportGoal" placeholder="예: 연간 50만 달러"></div>
+      </div>
+    </div>
+
+    <!-- 제품 정보 -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-package"></i>제품 정보</div>
+      <div class="row1">
+        <label>주력 제품 카테고리</label>
+        <div class="tags" id="catTags">
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="감귤/과일">감귤 / 과일</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="녹차/음료">녹차 / 음료</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="해산물">해산물</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="가공식품">가공식품</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="용암해수">용암해수</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="흑돼지">흑돼지</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="건강기능식품">건강기능식품</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="스낵/과자">스낵 / 과자</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="기타">기타</label>
+        </div>
+      </div>
+      <div class="row1">
+        <div class="fg"><label>대표 제품 및 설명</label>
+          <textarea id="productDesc" placeholder="예: 제주 한라봉 착즙 주스 / 무첨가 냉압착 방식, 500ml 병입 포장"></textarea>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>수출 희망 단가 (FOB)</label><input type="text" id="fobPrice" placeholder="예: $8~$12 / 500ml"></div>
+        <div class="fg"><label>MOQ (최소주문수량)</label><input type="text" id="moq" placeholder="예: 500박스 / 1 FCL"></div>
+      </div>
+      <div class="row1">
+        <label>보유 인증</label>
+        <div class="tags" id="certTags">
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="HACCP">HACCP</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="유기농">유기농</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="Halal">Halal</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="Kosher">Kosher</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="Non-GMO">Non-GMO</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="Vegan">Vegan</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="ISO">ISO</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="GAP">GAP</label>
+        </div>
+      </div>
+      <div class="row1">
+        <div class="fg"><label>주요 페인포인트</label>
+          <textarea id="painPoints" placeholder="예: 물류비 부담으로 가격 경쟁력 부족, 해외 바이어 발굴 채널 없음, 현지 인증 취득 방법 모름"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn p" onclick="goTo(2)">다음 <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2 ===== -->
+  <div class="page" id="page2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-database"></i>Tridge 데이터 첨부 <span style="font-size:11px;color:var(--gray-text);font-weight:400;margin-left:4px">선택사항</span></div>
+      <div class="radio-g">
+        <div class="ri on" id="r_none" onclick="setDM('none')">
+          <input type="radio" name="dm" checked>
+          <div><div class="rl">데이터 없음 — AI 웹서치로 시장 조사</div><div class="rs">AI가 최신 글로벌 무역 데이터를 실시간으로 수집하여 보고서를 생성합니다</div></div>
+        </div>
+        <div class="ri" id="r_tridge" onclick="setDM('tridge')">
+          <input type="radio" name="dm">
+          <div><div class="rl">Tridge 데이터 첨부 — 실거래 데이터 기반 분석</div><div class="rs">CSV / Excel 파일 업로드 시 실제 거래 데이터를 분석에 직접 반영합니다</div></div>
+        </div>
+        <div class="ri" id="r_both" onclick="setDM('both')">
+          <input type="radio" name="dm">
+          <div><div class="rl">Tridge 데이터 + 웹서치 병행 <span class="badge rec">권장</span></div><div class="rs">실거래 데이터를 기반으로 부족한 부분은 웹서치로 보완합니다</div></div>
+        </div>
+      </div>
+      <div id="tridgeUpload" style="display:none">
+        <div class="upload-z" onclick="document.getElementById('tridgeInput').click()"
+             ondragover="event.preventDefault()" ondrop="event.preventDefault();handleTridge(event.dataTransfer.files)">
+          <i class="ti ti-table-import"></i>
+          <div class="up-title">CSV 또는 Excel 파일 업로드</div>
+          <div class="up-sub">수출입 거래 내역 · 가격 동향 · 바이어 리스트 · 경쟁사 소싱 데이터</div>
+        </div>
+        <input type="file" id="tridgeInput" accept=".csv,.xlsx,.xls" multiple style="display:none" onchange="handleTridge(this.files)">
+        <div id="tridgeList"></div>
+        <div class="ibox"><i class="ti ti-shield-check"></i>업로드된 파일은 보고서 생성에만 사용되며 외부 서버에 전송되지 않습니다</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> 이전</button>
+      <button class="btn p" onclick="goTo(3)">다음 <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3 ===== -->
+  <div class="page" id="page3">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-target"></i>타겟 시장 설정</div>
+      <div class="srow">
+        <div><div class="slbl">국가 선정 방식</div></div>
+        <select id="targetMode" onchange="toggleCountries()" style="width:180px">
+          <option value="auto">AI 자동 추천 (스코어링)</option>
+          <option value="manual">직접 선택</option>
+        </select>
+      </div>
+      <div id="manualC" style="display:none;padding-top:12px">
+        <label>관심 국가 (최대 5개 선택)</label>
+        <div class="tags" id="countryTags" style="margin-top:6px">
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="미국">미국</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="일본">일본</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="중국">중국</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="싱가포르">싱가포르</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="UAE">UAE</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="베트남">베트남</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="홍콩">홍콩</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="캐나다">캐나다</label>
+          <label class="tag" onclick="tgl(this)"><input type="checkbox" value="호주">호주</label>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-settings"></i>보고서 옵션</div>
+      <div class="srow">
+        <div><div class="slbl">보고서 언어</div></div>
+        <select id="reportLang" style="width:160px">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="both">한/영 병행</option>
+        </select>
+      </div>
+      <div class="srow">
+        <div><div class="slbl">성공 사례 포함</div><div class="ssub">유사 한국 식품 기업 수출 레퍼런스</div></div>
+        <select id="caseStudy" style="width:160px"><option value="yes">포함</option><option value="no">제외</option></select>
+      </div>
+      <div class="srow">
+        <div><div class="slbl">Tridge Ark 섹션</div><div class="ssub">AI 에이전트 바이어 매칭 서비스 소개</div></div>
+        <select id="arkSection" style="width:160px"><option value="yes">포함</option><option value="no">제외</option></select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> 이전</button>
+      <button class="btn p" onclick="goTo(4)">보고서 생성 <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 4 ===== -->
+  <div class="page" id="page4">
+    <div class="card" id="sumCard">
+      <div class="card-title"><i class="ti ti-list-check"></i>생성 요약 확인</div>
+      <div id="sumContent"></div>
+    </div>
+    <div id="genArea" style="display:none">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-loader"></i>보고서 생성 중...</div>
+        <div id="progArea"></div>
+      </div>
+    </div>
+    <div id="reportArea" style="display:none">
+      <div class="report-header" id="reportHeader"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+        <span style="font-size:14px;font-weight:700;color:var(--text)">보고서 — 섹션별 편집 가능</span>
+        <button class="btn sm" onclick="regenAll()"><i class="ti ti-refresh"></i> 전체 재생성</button>
+      </div>
+      <div id="sections"></div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-download"></i>다운로드</div>
+        <div class="dl-row">
+          <button class="dl-btn word" onclick="downloadDocx()"><i class="ti ti-file-word"></i>Word 다운로드 (.docx)</button>
+          <button class="dl-btn html" onclick="downloadHtml()" style="color:#1D9E75"><i class="ti ti-file-code" style="color:#1D9E75;font-size:22px"></i>HTML 다운로드 (.html)</button>
+        </div>
+        <div class="ibox" style="margin-top:10px"><i class="ti ti-info-circle"></i>PDF로 저장하려면 HTML 파일을 브라우저에서 열고 <b>Ctrl+P → PDF로 저장</b>을 선택하세요. 또는 Word 파일을 <b>파일 → PDF로 저장</b>하세요.</div>
+      </div>
+    </div>
+    <div class="btn-row" id="genBtnRow">
+      <button class="btn" onclick="goTo(3)"><i class="ti ti-arrow-left"></i> 이전</button>
+      <button class="btn p" id="genBtn" onclick="generateReport()"><i class="ti ti-sparkles"></i> 지금 생성하기</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let curPage=1, dataMode='none', selModel='claude';
+  let docFileData=null;
+  let tridgeData='';
+  let reportSections={};
+
+const SECTION_KEYS=['executive','diagnosis','kfood','targets','strategy','roadmap'];
+const SECTION_NAMES={
+  executive:'I. Executive Summary',
+  diagnosis:'II. 경쟁력 진단',
+  kfood:'III. K-Food 글로벌 동향',
+  targets:'IV. 타겟 국가 Top 3 심층 분석',
+  strategy:'V. 수출 전략 & 바이어 매칭',
+  roadmap:'VI. 실행 로드맵 & Action Plan'
+};
+
+function goTo(n){
+  if(n===4) buildSum();
+  document.getElementById('page'+curPage).classList.remove('act');
+  document.getElementById('page'+n).classList.add('act');
+  for(let i=1;i<=4;i++){
+    const num=document.getElementById('sn'+i), lbl=document.getElementById('sl'+i);
+    num.className='sn'+(i<n?' dn':i===n?' on':'');
+    lbl.className='sl'+(i===n?' on':'');
+    if(i<n) num.innerHTML='<i class="ti ti-check" style="font-size:11px"></i>';
+    else num.textContent=i;
+  }
+  curPage=n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function tgl(el){el.classList.toggle('on')}
+function getT(id){return[...document.querySelectorAll('#'+id+' .tag.on input')].map(i=>i.value)}
+
+function setDM(m){
+  dataMode=m;
+  ['none','tridge','both'].forEach(x=>document.getElementById('r_'+x).classList.remove('on'));
+  document.getElementById('r_'+m).classList.add('on');
+  document.getElementById('tridgeUpload').style.display=(m!=='none')?'block':'none';
+}
+
+function setModel(m){
+  selModel=m;
+  ['claude','gemini'].forEach(x=>{
+    document.getElementById('mt_'+x).classList.remove('on');
+    document.getElementById('ap_'+x).classList.remove('on');
+  });
+  document.getElementById('mt_'+m).classList.add('on');
+  document.getElementById('ap_'+m).classList.add('on');
+}
+
+function toggleCountries(){
+  document.getElementById('manualC').style.display=
+    document.getElementById('targetMode').value==='manual'?'block':'none';
+}
+
+/* ── 파일 업로드: PDF → base64, DOCX/TXT → 텍스트 추출 ── */
+function triggerDocInput(){
+  const inp=document.getElementById('docInput');
+  inp.value=''; // 같은 파일 재선택 허용
+  inp.click();
+}
+
+function handleDocUpload(files){
+  const f=files[0]; if(!f) return;
+  const item=document.createElement('div');
+  item.className='fitem';
+  item.innerHTML=`<i class="ti ti-file-description"></i><span>${f.name}</span>
+    <span class="rm" onclick="this.parentElement.remove();document.getElementById('analyzeBtn').style.display='none';docFileData=null">
+      <i class="ti ti-x"></i></span>`;
+  document.getElementById('docList').innerHTML='';
+  document.getElementById('docList').appendChild(item);
+  document.getElementById('analyzeBtn').style.display='block';
+
+  const name=f.name.toLowerCase();
+  const isPdf=name.endsWith('.pdf');
+  const isDocx=name.match(/\.docx?$/);
+  const isTxt=name.endsWith('.txt');
+
+  if(isPdf){
+    // PDF → base64로 Claude API document block에 전달
+    const reader=new FileReader();
+    reader.onload=e=>{
+      docFileData={type:'base64',content:e.target.result.split(',')[1],mediaType:'application/pdf',name:f.name};
+    };
+    reader.readAsDataURL(f);
+  } else if(isDocx){
+    // DOCX → mammoth.js로 텍스트 추출 → 텍스트로 전달
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{
+        const result=await mammoth.extractRawText({arrayBuffer:e.target.result});
+        docFileData={type:'text',content:result.value,name:f.name};
+      } catch(err){
+        // mammoth 실패 시 파일명만 저장
+        docFileData={type:'text',content:`파일명: ${f.name} (텍스트 추출 실패 - 내용을 직접 입력해주세요)`,name:f.name};
+      }
+    };
+    reader.readAsArrayBuffer(f);
+  } else {
+    // TXT
+    const reader=new FileReader();
+    reader.onload=e=>{docFileData={type:'text',content:e.target.result,name:f.name};};
+    reader.readAsText(f);
+  }
+}
+
+async function analyzeDoc(){
+  if(!docFileData){alert('파일을 먼저 업로드해주세요.');return;}
+  const key=selModel==='claude'
+    ?document.getElementById('claudeKey').value
+    :document.getElementById('geminiKey').value;
+  if(!key){alert('API 키를 입력해주세요.');return;}
+
+  document.getElementById('analyzeSpin').style.display='flex';
+  document.getElementById('analyzeIcon').style.display='none';
+  document.getElementById('analyzeBtnEl').disabled=true;
+
+  const jsonSchema=`{"companyName":"","contactName":"","region":"","revenue":"","exportExp":"","exportGoal":"","productDesc":"","fobPrice":"","moq":"","certs":[],"cats":[],"painPoints":""}`;
+  const instruction=`이 문서에서 기업 정보를 추출하여 아래 JSON 스키마로만 응답하세요. 마크다운 코드블록 없이 순수 JSON만 출력하세요.\n${jsonSchema}`;
+
+  let attempt=0;
+  while(true){
+    attempt++;
+    if(attempt>1){
+      for(let i=60;i>0;i--){
+        document.getElementById('analyzeLbl').textContent=`한도 초과 — ${i}초 후 재시도 (${attempt}번째)...`;
+        await new Promise(r=>setTimeout(r,1000));
+      }
+    }
+    document.getElementById('analyzeLbl').textContent=attempt>1?`문서 분석 중 (재시도 ${attempt}번째)...`:'문서 분석 중...';
+
+  try{
+    let text='';
+    if(selModel==='claude'){
+      let userContent;
+      if(docFileData.type==='text'){
+        userContent=`${instruction}\n\n문서 내용:\n${docFileData.content.substring(0,4000)}`;
+      } else {
+        // Claude API document block (PDF 지원)
+        userContent=[
+          {type:'document',source:{type:'base64',media_type:docFileData.mediaType,data:docFileData.content}},
+          {type:'text',text:instruction}
+        ];
+      }
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,messages:[{role:'user',content:userContent}]})
+      });
+      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
+      const d=await r.json();
+      text=d.content?.map(c=>c.text||'').join('')||'';
+    } else {
+      // Gemini: 텍스트로만 전달
+      const gm=document.getElementById('geminiModel').value;
+      let prompt=instruction;
+      if(docFileData.type==='text') prompt+=`\n\n문서 내용:\n${docFileData.content.substring(0,4000)}`;
+      else prompt+=`\n\n(첨부 파일: ${docFileData.name} — 텍스트 추출 불가, 파일명 기반으로 추측하세요)`;
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${gm}:generateContent?key=${key}`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+      });
+      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
+      const d=await r.json();
+      text=d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    }
+
+    const clean=text.replace(/```json|```/g,'').trim();
+    const data=JSON.parse(clean);
+    const fields={companyName:'companyName',contactName:'contactName',region:'region',
+      exportGoal:'exportGoal',productDesc:'productDesc',fobPrice:'fobPrice',moq:'moq',painPoints:'painPoints'};
+    for(const [k,id] of Object.entries(fields)){
+      if(data[k]) document.getElementById(id).value=data[k];
+    }
+    document.getElementById('analyzeLbl').textContent='✓ 자동 입력 완료';
+    document.getElementById('analyzeSpin').style.display='none';
+    document.getElementById('analyzeIcon').style.display='inline';
+    document.getElementById('analyzeBtnEl').disabled=false;
+    document.getElementById('analyzeBtnEl').style.background='';
+    document.getElementById('analyzeBtnEl').style.borderColor='';
+    break; // 성공 → 루프 탈출
+
+  } catch(e){
+    console.error(e);
+    const msg=e.message||'';
+    if(msg.includes('429')||msg.includes('rate')){
+      // 429면 루프 계속 (위에서 60초 대기 후 재시도)
+      continue;
+    }
+    // 다른 오류는 즉시 실패 표시
+    let displayMsg=msg;
+    if(msg.includes('401')||msg.includes('authentication')) displayMsg='API 키 인증 실패 — API 키를 다시 확인해주세요.';
+    else if(msg.includes('400')) displayMsg='잘못된 요청 — PDF 또는 TXT 파일을 권장합니다.';
+    else if(msg.includes('fetch')||msg.includes('network')) displayMsg='네트워크 오류 — 인터넷 연결을 확인해주세요.';
+    document.getElementById('analyzeLbl').textContent='분석 실패: '+displayMsg;
+    document.getElementById('analyzeBtnEl').style.background='#E24B4A';
+    document.getElementById('analyzeBtnEl').style.borderColor='#E24B4A';
+    document.getElementById('analyzeSpin').style.display='none';
+    document.getElementById('analyzeIcon').style.display='inline';
+    document.getElementById('analyzeBtnEl').disabled=false;
+    break; // 다른 오류 → 루프 탈출
+  }
+  } // while end
+}
+
+function triggerTridgeInput(){
+  const inp=document.getElementById('tridgeInput');
+  inp.value='';
+  inp.click();
+}
+
+function handleTridge(files){
+  const list=document.getElementById('tridgeList');
+  for(const f of files){
+    const item=document.createElement('div');
+    item.className='fitem';
+    item.innerHTML=`<i class="ti ti-table"></i><span>${f.name}</span>
+      <span class="rm" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></span>`;
+    list.appendChild(item);
+    const r=new FileReader();
+    r.onload=e=>{tridgeData+=`\n[${f.name}]\n`+e.target.result.substring(0,2000);};
+    r.readAsText(f);
+  }
+}
+
+function buildSum(){
+  const company=document.getElementById('companyName').value||'(미입력)';
+  const region=document.getElementById('region').value||'(미입력)';
+  const cats=getT('catTags');
+  const mode=dataMode==='none'?'AI 웹서치 기반':dataMode==='tridge'?'Tridge 실거래 데이터':'Tridge + 웹서치 병행';
+  const model=selModel==='claude'?'Claude Sonnet 4.6':'Gemini '+document.getElementById('geminiModel').value;
+  const lang={ko:'한국어',en:'English',both:'한/영 병행'}[document.getElementById('reportLang').value];
+  document.getElementById('sumContent').innerHTML=`
+    <div class="sum-row"><span class="sum-k">기업명</span><span class="sum-v">${company} (${region})</span></div>
+    <div class="sum-row"><span class="sum-k">주력 제품</span><span class="sum-v">${cats.length?cats.join(', '):'미선택'}</span></div>
+    <div class="sum-row"><span class="sum-k">데이터 소스</span><span class="sum-v">${mode}</span></div>
+    <div class="sum-row"><span class="sum-k">AI 모델</span><span class="sum-v">${model}</span></div>
+    <div class="sum-row"><span class="sum-k">보고서 언어</span><span class="sum-v">${lang}</span></div>`;
+}
+
+function buildPrompt(sectionKey){
+  const company=document.getElementById('companyName').value||'기업';
+  const region=document.getElementById('region').value||'지역';
+  const cats=getT('catTags').join(', ')||'식품';
+  const certs=getT('certTags').join(', ')||'없음';
+  const prod=document.getElementById('productDesc').value;
+  const pain=document.getElementById('painPoints').value;
+  const fob=document.getElementById('fobPrice').value;
+  const moq=document.getElementById('moq').value;
+  const lang=document.getElementById('reportLang').value;
+  const cs=document.getElementById('caseStudy').value==='yes';
+  const ark=document.getElementById('arkSection').value==='yes';
+  const tdata=tridgeData?'\n[Tridge 거래 데이터]\n'+tridgeData.substring(0,2000):'';
+
+  const sections={
+    executive:'I. Executive Summary (A4 2페이지 분량)\n핵심 수치 중심 Hook, 보고서 목적, 기대 효과, Tridge가 제안하는 핵심 타겟 국가 3개 및 전략 핵심 메시지',
+    diagnosis:'II. '+region+' 식품산업 글로벌 경쟁력 진단 (A4 3~4페이지)\n1. '+region+' 프리미엄의 글로벌 가치 (청정 자연, 비건/유기농 트렌드, 구체적 수치)\n2. 글로벌 트렌드와의 부합성 (K-Food 열풍, 프리미엄 식품 수요)\n3. 글로벌 진출 시 선제 준비 필요 영역 (비대립적 프레이밍)',
+    kfood:'III. Tridge Data 기반 글로벌 K-Food & 프리미엄 식품 동향 (A4 4~5페이지)\n1. 최근 3년간 한국 식품 수출입 물동량 변화\n2. 글로벌 B2B 바이어 검색 트렌드\n3. 경쟁 청정 지역 비교 분석\n4. '+cats+' 카테고리 글로벌 가격 동향',
+    targets:'IV. 데이터 기반 유망 타겟 국가 Top 3 심층 분석 (A4 10~12페이지)\nTridge 스코어링 기준: 수입성장률(30%)+FTA혜택(20%)+K-Food인지도(25%)+진입장벽(25%)\n각 국가별: 시장 개요, 수입 트렌드, 유통 구조, 현지 거래 가격대, 바이어 소싱 기준'+(cs?', 성공 사례 1건':''),
+    strategy:'V. Tridge B2B 플랫폼 활용 실전 수출 전략 (A4 5~6페이지)\n1. 디지털 쇼룸 구축 전략\n2. 타겟 바이어 페르소나 분석\n3. 프라이싱 전략'+(fob?' (희망 단가 '+fob+' 기준)':'')+(moq?' / MOQ '+moq:'')+('\n4. 첫 수출 성공을 위한 실전 팁')+(ark?'\n5. Tridge Ark AI 에이전트 활용':''),
+    roadmap:'VI. 실행 로드맵 & Action Plan (A4 3~4페이지)\n준비기(1~3개월), 바이어 발굴 및 협상기(4~6개월), 첫 수출 달성 및 확장기(7~12개월)\nTridge 제공 솔루션: 무역대행, 수출바우처지원사업, Ark 온보딩'
+  };
+
+  const langStr=lang==='ko'?'한국어':lang==='en'?'영어':'한국어 (주요 용어 영문 병기)';
+
+  return '당신은 Tridge(글로벌 농식품 무역 데이터 플랫폼) 수출전략 전문가입니다.\n'
+    +'아래 기업 정보를 바탕으로 해외수출전략보고서의 지정 섹션을 작성하세요.\n\n'
+    +'[기업 정보]\n'
+    +'기업명: '+company+' / 지역: '+region+'\n'
+    +'주력 제품: '+cats+' / 보유 인증: '+certs+'\n'
+    +'제품 상세: '+(prod||'미입력')+'\n페인포인트: '+(pain||'미입력')+'\n'
+    +'데이터 소스: '+(dataMode==='none'?'웹서치 기반':dataMode==='tridge'?'Tridge 실거래 데이터':'Tridge + 웹서치 병행')+tdata+'\n\n'
+    +'[작성 섹션]\n'+sections[sectionKey]+'\n\n'
+    +'[출력 형식 - 반드시 준수]\n'
+    +'아래 구분자 태그만 사용하여 작성하세요. 마크다운(#,*,**,--)은 절대 사용 금지.\n\n'
+    +'사용 가능한 태그:\n'
+    +'[SUMMARY]이 섹션 핵심 요약 1~2문장[/SUMMARY]\n'
+    +'[H2]소제목[/H2]\n'
+    +'[PARA]본문 단락 (한 단락씩)[/PARA]\n'
+    +'[STAT]라벨|값|단위|up[/STAT] (수치 있을때만, trend: up/down/neutral)\n'
+    +'[INSIGHT]핵심 인사이트[/INSIGHT] (있을때만)\n'
+    +'[BULLET]불릿 항목[/BULLET] (여러개 가능)\n'
+    +'[TABLE]\n헤더1|헤더2|헤더3\n값1|값2|값3\n[/TABLE] (있을때만, 최소 3행)\n\n'
+    +'[작성 지침]\n'
+    +'언어: '+langStr+'\n'
+    +'구체적 수치와 데이터 근거를 반드시 포함하세요\n'
+    +'비대립적, 해결책 중심 프레이밍\n'
+    +'해당 섹션 내용만 작성하세요';
+}
+
+
+async function callAI(prompt, retry=0){
+  const MAX_RETRY=2;
+  try{
+  if(selModel==='claude'){
+    const key=document.getElementById('claudeKey').value;
+    if(!key) throw new Error('Anthropic API 키를 입력해주세요.');
+    const body={model:'claude-sonnet-4-6',max_tokens:4000,messages:[{role:'user',content:prompt}]};
+    if(dataMode!=='tridge') body.tools=[{type:'web_search_20250305',name:'web_search'}];
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify(body)
+    });
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
+    const d=await r.json();
+    const raw=d.content?.map(c=>c.text||'').filter(Boolean).join('\n')||'';
+    return parseDelimiters(raw);
+  } else {
+    const key=document.getElementById('geminiKey').value;
+    if(!key) throw new Error('Google API 키를 입력해주세요.');
+    const gm=document.getElementById('geminiModel').value;
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${gm}:generateContent?key=${key}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+    });
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
+    const d=await r.json();
+    const raw=d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    return parseDelimiters(raw);
+  }
+  } catch(e){
+    throw e;
+  }
+}
+
+
+// ── 구분자 파싱 함수 ──
+function parseDelimiters(raw){
+  const result={summary:'',subsections:[]};
+  let current={heading:'',paragraphs:[],bullets:[],stats:[],tables:[],insight:''};
+
+  // SUMMARY 추출
+  const summaryM=raw.match(/\[SUMMARY\]([\s\S]*?)\[\/SUMMARY\]/);
+  if(summaryM) result.summary=summaryM[1].trim();
+
+  // H2 기준으로 분할
+  const parts=raw.split(/(?=\[H2\])/);
+  parts.forEach(part=>{
+    if(!part.trim()) return;
+    const h2M=part.match(/\[H2\]([\s\S]*?)\[\/H2\]/);
+    const sub={heading:h2M?h2M[1].trim():'',paragraphs:[],bullets:[],stats:[],tables:[],insight:''};
+
+    // PARA
+    const paraRe=/\[PARA\]([\s\S]*?)\[\/PARA\]/g;
+    let m;
+    while((m=paraRe.exec(part))!==null) sub.paragraphs.push(m[1].trim());
+    // H2 없는 일반 텍스트도 단락으로
+    if(!h2M){
+      const plain=part.replace(/\[SUMMARY\][\s\S]*?\[\/SUMMARY\]/g,'')
+        .replace(/\[STAT\][\s\S]*?\[\/STAT\]/g,'')
+        .replace(/\[INSIGHT\][\s\S]*?\[\/INSIGHT\]/g,'')
+        .replace(/\[BULLET\][\s\S]*?\[\/BULLET\]/g,'')
+        .replace(/\[TABLE\][\s\S]*?\[\/TABLE\]/g,'').trim();
+      if(plain) plain.split(/\n\n+/).forEach(function(p){if(p.trim()) sub.paragraphs.push(p.trim());});
+    }
+
+    // BULLET
+    const bulletRe=/\[BULLET\]([\s\S]*?)\[\/BULLET\]/g;
+    while((m=bulletRe.exec(part))!==null) sub.bullets.push(m[1].trim());
+
+    // STAT
+    const statRe=/\[STAT\]([\s\S]*?)\[\/STAT\]/g;
+    while((m=statRe.exec(part))!==null){
+      const p=m[1].split('|');
+      sub.stats.push({label:p[0]||'',value:p[1]||'',unit:p[2]||'',trend:p[3]||'neutral'});
+    }
+
+    // INSIGHT
+    const insightM=part.match(/\[INSIGHT\]([\s\S]*?)\[\/INSIGHT\]/);
+    if(insightM) sub.insight=insightM[1].trim();
+
+    // TABLE
+    const tableRe=/\[TABLE\]([\s\S]*?)\[\/TABLE\]/g;
+    while((m=tableRe.exec(part))!==null){
+      const rows=m[1].trim().split('\n').filter(r=>r.trim());
+      if(rows.length>=2){
+        sub.tables.push({headers:rows[0].split('|').map(h=>h.trim()),rows:rows.slice(1).map(r=>r.split('|').map(c=>c.trim()))});
+      }
+    }
+
+    if(sub.heading||sub.paragraphs.length||sub.bullets.length||sub.stats.length||sub.tables.length||sub.insight){
+      result.subsections.push(sub);
+    }
+  });
+
+  // 아무것도 파싱 안됐으면 원문을 단락으로
+  if(!result.subsections.length){
+    const plain=raw.replace(/\[[A-Z0-9/]+\]/g,'').trim();
+    result.subsections=[{heading:'',paragraphs:[plain],bullets:[],stats:[],tables:[],insight:''}];
+  }
+  return result;
+}
+
+// ── 섹션 HTML 렌더링 ──
+function renderSectionHtml(data){
+  if(!data) return '<div style="color:#888;font-size:12px">내용 없음</div>';
+  // data가 문자열이면 파싱
+  if(typeof data==='string') data=parseDelimiters(data);
+  let html='';
+  if(data.summary){
+    html+='<div style="background:#E6F1FB;border-left:3px solid #185FA5;padding:9px 13px;border-radius:0 4px 4px 0;font-size:12px;color:#0C447C;margin-bottom:14px;line-height:1.7">'+data.summary+'</div>';
+  }
+  (data.subsections||[]).forEach(function(sub){
+    if(sub.heading){
+      html+='<div style="font-size:13px;font-weight:700;color:#042C53;margin:16px 0 7px;padding-left:10px;border-left:3px solid #185FA5;line-height:1.4">'+sub.heading+'</div>';
+    }
+    if(sub.stats&&sub.stats.length){
+      html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0 14px">';
+      sub.stats.forEach(function(s){
+        const tColor=s.trend==='up'?'#1D9E75':s.trend==='down'?'#E24B4A':'#888';
+        const tIcon=s.trend==='up'?'▲':s.trend==='down'?'▼':'—';
+        html+='<div style="background:#F5F8FC;border:1px solid #DCE9F7;border-radius:6px;padding:12px 10px;text-align:center;position:relative">'
+          +'<div style="font-size:20px;font-weight:800;color:#0C447C;line-height:1.2">'+s.value+'<span style="font-size:11px;font-weight:500;color:#185FA5;margin-left:2px">'+s.unit+'</span></div>'
+          +'<div style="font-size:10px;color:#888;margin-top:4px;line-height:1.4">'+s.label+'</div>'
+          +'<div style="position:absolute;top:7px;right:9px;font-size:10px;color:'+tColor+'">'+tIcon+'</div>'
+          +'</div>';
+      });
+      html+='</div>';
+    }
+    if(sub.insight){
+      html+='<div style="background:#F5F8FC;border:1px solid #B5D4F4;border-radius:4px;padding:9px 13px;font-size:12px;color:#0C447C;margin:10px 0;font-style:italic;line-height:1.7">💡 '+sub.insight+'</div>';
+    }
+    (sub.paragraphs||[]).forEach(function(p){
+      html+='<div style="font-size:12px;line-height:1.85;color:#2a2a2a;margin-bottom:7px;word-break:keep-all">'+p+'</div>';
+    });
+    if(sub.bullets&&sub.bullets.length){
+      html+='<ul style="margin:6px 0 12px;padding:0;list-style:none">';
+      sub.bullets.forEach(function(b){
+        html+='<li style="font-size:12px;line-height:1.75;color:#2a2a2a;padding:2px 0 2px 18px;position:relative;word-break:keep-all"><span style="position:absolute;left:0;color:#185FA5;font-weight:700">▸</span>'+b+'</li>';
+      });
+      html+='</ul>';
+    }
+    (sub.tables||[]).forEach(function(tbl){
+      html+='<div style="overflow-x:auto;margin:10px 0"><table style="width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed">';
+      html+='<thead><tr>'+tbl.headers.map(function(h){return '<th style="background:#0C447C;color:#fff;padding:8px 10px;text-align:left;font-weight:600;white-space:nowrap">'+h+'</th>';}).join('')+'</tr></thead>';
+      html+='<tbody>'+tbl.rows.map(function(row,ri){return '<tr>'+row.map(function(c){return '<td style="padding:7px 10px;border:1px solid #E0E8F0;word-break:keep-all;'+(ri%2===1?'background:#F5F8FC':'')+'">'+c+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>';
+      html+='</table></div>';
+    });
+  });
+  return html||'<div style="color:#888;font-size:12px">내용 없음</div>';
+}
+
+function renderSections(){
+  const container=document.getElementById('sections');
+  container.innerHTML='';
+  for(var ki=0;ki<SECTION_KEYS.length;ki++){
+    var key=SECTION_KEYS[ki];
+    var data=reportSections[key]||null;
+    var block=document.createElement('div');
+    block.className='sec-block'; block.id='block_'+key;
+    var previewHtml=data?renderSectionHtml(data):'<div style="color:#888;font-size:12px">아직 생성되지 않았습니다</div>';
+    block.innerHTML=
+      '<div class="sec-hd">'
+      +'<span class="sec-title">'+SECTION_NAMES[key]+'</span>'
+      +'<button class="btn sm" onclick="toggleEdit(\''+key+'\')"><i class="ti ti-edit"></i> 수정 요청</button>'
+      +'</div>'
+      +'<div class="sec-body" id="body_'+key+'">'+previewHtml+'</div>'
+      +'<div class="sec-edit" id="edit_'+key+'">'
+      +'<textarea id="hint_'+key+'" rows="3" placeholder="수정 방향을 입력하세요. 예: 일본 시장 내용을 더 구체적으로 / 가격 데이터 추가 / 분량 늘려줘"></textarea>'
+      +'<div class="erow">'
+      +'<button class="btn sm" onclick="toggleEdit(\''+key+'\')">취소</button>'
+      +'<button class="btn sm p" id="rbtn_'+key+'" onclick="regenSection(\''+key+'\')"> '
+      +'<div class="spin" id="rspin_'+key+'" style="display:none;width:13px;height:13px;border-width:1.5px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div>'
+      +'<i class="ti ti-refresh" id="ricon_'+key+'"></i> 섹션 재생성'
+      +'</button>'
+      +'</div>'
+      +'</div>';
+    container.appendChild(block);
+  }
+}
+
+async function generateReport(){
+  document.getElementById('genBtnRow').style.display='none';
+  document.getElementById('genArea').style.display='block';
+  document.getElementById('progArea').innerHTML='';
+  reportSections={};
+
+  for(const key of SECTION_KEYS){
+    const row=document.createElement('div');
+    row.className='prog'; row.id='prog_'+key;
+    row.innerHTML='<div class="spin"></div><span>'+SECTION_NAMES[key]+' 생성 중...</span>';
+    document.getElementById('progArea').appendChild(row);
+
+    let attempt=0;
+    while(true){
+      try{
+        attempt++;
+        if(attempt>1){
+          for(let i=60;i>0;i--){
+            row.innerHTML='<div class="spin"></div><span style="color:#B07A00">'+SECTION_NAMES[key]+' — '+i+'초 후 재시도 ('+attempt+'번째)...</span>';
+            await new Promise(r=>setTimeout(r,1000));
+          }
+        }
+        row.innerHTML='<div class="spin"></div><span>'+SECTION_NAMES[key]+' 생성 중'+(attempt>1?' (재시도 '+attempt+'번째)':'')+'...</span>';
+        const data=await callAI(buildPrompt(key));
+        reportSections[key]=data;
+        row.innerHTML='<i class="ti ti-circle-check" style="color:var(--green);font-size:18px"></i><span style="color:var(--green);font-weight:600">'+SECTION_NAMES[key]+' 완료</span>';
+        break;
+      } catch(e){
+        const msg=e.message||'';
+        const isRetryable=msg.includes('429')||msg.includes('rate')||msg.includes('fetch')||msg.includes('Failed')||msg.includes('network');
+        if(isRetryable){
+          continue;
+        } else {
+          await new Promise(function(resolve){
+            row.innerHTML='<i class="ti ti-circle-x" style="color:var(--red);font-size:18px"></i>'
+              +'<span style="color:var(--red);flex:1">'+SECTION_NAMES[key]+' 오류: '+msg+'</span>'
+              +'<button class="btn sm p" id="retry_'+key+'" style="margin-left:8px;flex-shrink:0"><i class="ti ti-refresh"></i> 재시도</button>';
+            document.getElementById('retry_'+key).onclick=function(){attempt=0;resolve();};
+          });
+        }
+      }
+    }
+
+    if(SECTION_KEYS.indexOf(key)<SECTION_KEYS.length-1){
+      const countdown=document.createElement('div');
+      countdown.className='prog'; countdown.id='countdown';
+      countdown.innerHTML='<div class="spin"></div><span style="color:var(--gray-text)">다음 섹션까지 대기 중... <b id="cdNum">15</b>초</span>';
+      document.getElementById('progArea').appendChild(countdown);
+      for(let i=15;i>0;i--){
+        const cd=document.getElementById('cdNum');
+        if(cd) cd.textContent=i;
+        await new Promise(r=>setTimeout(r,1000));
+      }
+      const cdEl=document.getElementById('countdown');
+      if(cdEl) cdEl.remove();
+    }
+  }
+  setTimeout(function(){
+    document.getElementById('genArea').style.display='none';
+    renderHeader(); renderSections();
+    document.getElementById('reportArea').style.display='block';
+  },500);
+}
+
+function renderHeader(){
+  const company=document.getElementById('companyName').value||'기업';
+  const region=document.getElementById('region').value||'지역';
+  const today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('reportHeader').innerHTML=
+    '<h2>'+region+' '+company+'</h2>'
+    +'<p style="font-size:15px;font-weight:600;margin-bottom:6px;opacity:.9">해외수출전략보고서</p>'
+    +'<p>Powered by Tridge Data Intelligence &nbsp;·&nbsp; '+today+'</p>';
+}
+
+function toggleEdit(key){
+  const el=document.getElementById('edit_'+key);
+  el.style.display=el.style.display==='block'?'none':'block';
+  if(el.style.display==='block') document.getElementById('hint_'+key).focus();
+}
+
+async function regenAll(){
+  if(!confirm('전체 보고서를 다시 생성하시겠습니까?')) return;
+  document.getElementById('reportArea').style.display='none';
+  document.getElementById('genBtnRow').style.display='flex';
+  document.getElementById('sections').innerHTML='';
+  generateReport();
+}
+
+async function regenSection(key){
+  const hint=document.getElementById('hint_'+key).value;
+  document.getElementById('rspin_'+key).style.display='flex';
+  document.getElementById('ricon_'+key).style.display='none';
+  document.getElementById('rbtn_'+key).disabled=true;
+  const full=buildPrompt(key)+(hint?`\n\n[수정 요청]\n${hint}`:'');
+  try{
+    const data=await callAI(full);
+    reportSections[key]=data;
+    document.getElementById('body_'+key).innerHTML=renderSectionHtml(data);
+    toggleEdit(key);
+  } catch(e){ alert('재생성 실패: '+e.message); }
+  const rspin=document.getElementById('rspin_'+key);
+  const ricon=document.getElementById('ricon_'+key);
+  const rbtn=document.getElementById('rbtn_'+key);
+  if(rspin) rspin.style.display='none';
+  if(ricon) ricon.style.display='inline';
+  if(rbtn) rbtn.disabled=false;
+}
+
+// ── Word 요소 생성 헬퍼 ──
+function makeDocxFromData(data, docxLib){
+  const {Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel,AlignmentType,
+    BorderStyle,WidthType,ShadingType,PageBreak,LevelFormat}=docxLib;
+  const BLUE='185FA5',BLUE_DARK='0C447C',BLUE_LIGHT='DCE9F7',TEXT='1A1A1A',GRAY='888780',WHITE='FFFFFF';
+  const cellBorder={style:BorderStyle.SINGLE,size:4,color:'C8D8EC'};
+  const borders={top:cellBorder,bottom:cellBorder,left:cellBorder,right:cellBorder};
+  const items=[];
+
+  (data.subsections||[]).forEach(sub=>{
+    // 소제목
+    if(sub.heading){
+      items.push(new Paragraph({
+        spacing:{before:320,after:100},
+        children:[
+          new TextRun({text:'',size:4}),
+          new TextRun({text:sub.heading,bold:true,size:26,color:BLUE_DARK,font:'맑은 고딕'})
+        ],
+        border:{left:{style:BorderStyle.SINGLE,size:16,color:BLUE_DARK,space:8}}
+      }));
+    }
+
+    // 인사이트 박스
+    if(sub.insight){
+      items.push(new Paragraph({
+        shading:{fill:BLUE_LIGHT,type:ShadingType.CLEAR},
+        spacing:{before:80,after:80},
+        indent:{left:200,right:200},
+        children:[
+          new TextRun({text:'💡 ',size:20}),
+          new TextRun({text:sub.insight,size:20,color:BLUE_DARK,font:'맑은 고딕',italics:true})
+        ]
+      }));
+    }
+
+    // 수치 카드 (stats)
+    if(sub.stats&&sub.stats.length){
+      const rows=[new TableRow({children:sub.stats.map(s=>
+        new TableCell({
+          borders,
+          shading:{fill:BLUE_LIGHT,type:ShadingType.CLEAR},
+          margins:{top:120,bottom:120,left:200,right:200},
+          children:[
+            new Paragraph({alignment:AlignmentType.CENTER,
+              children:[new TextRun({text:s.value+(s.unit?` ${s.unit}`:''),bold:true,size:32,color:BLUE_DARK,font:'맑은 고딕'})]}),
+            new Paragraph({alignment:AlignmentType.CENTER,
+              children:[new TextRun({text:s.label,size:18,color:GRAY,font:'맑은 고딕'})]})
+          ]
+        })
+      )})];
+      const colW=Math.floor(9026/Math.min(sub.stats.length,4));
+      items.push(new Table({
+        width:{size:9026,type:WidthType.DXA},
+        columnWidths:sub.stats.slice(0,4).map(()=>colW),
+        rows,margins:{top:80,bottom:80}
+      }));
+      items.push(new Paragraph({spacing:{after:80},children:[new TextRun('')]}));
+    }
+
+    // 본문 단락
+    (sub.paragraphs||[]).forEach(p=>{
+      items.push(new Paragraph({
+        spacing:{after:120},
+        children:[new TextRun({text:p,size:22,color:TEXT,font:'맑은 고딕'})]
+      }));
+    });
+
+    // 불릿
+    (sub.bullets||[]).forEach(b=>{
+      items.push(new Paragraph({
+        numbering:{reference:'bullets',level:0},
+        spacing:{after:60},
+        children:[new TextRun({text:b,size:22,color:TEXT,font:'맑은 고딕'})]
+      }));
+    });
+
+    // 표
+    if(sub.table&&sub.table.headers&&sub.table.rows){
+      const colCount=sub.table.headers.length;
+      const colW=Math.floor(9026/colCount);
+      const tRows=[
+        new TableRow({tableHeader:true,children:sub.table.headers.map(h=>
+          new TableCell({
+            borders,
+            shading:{fill:BLUE_DARK,type:ShadingType.CLEAR},
+            margins:{top:80,bottom:80,left:160,right:160},
+            children:[new Paragraph({children:[new TextRun({text:h,bold:true,size:20,color:WHITE,font:'맑은 고딕'})]})]
+          })
+        )}),
+        ...sub.table.rows.map((row,ri)=>new TableRow({children:row.map(cell=>
+          new TableCell({
+            borders,
+            shading:{fill:ri%2===1?'F5F8FC':'FFFFFF',type:ShadingType.CLEAR},
+            margins:{top:80,bottom:80,left:160,right:160},
+            children:[new Paragraph({children:[new TextRun({text:String(cell),size:20,color:TEXT,font:'맑은 고딕'})]})]
+          })
+        )}))
+      ];
+      items.push(new Table({
+        width:{size:9026,type:WidthType.DXA},
+        columnWidths:Array(colCount).fill(colW),
+        rows:tRows
+      }));
+      items.push(new Paragraph({spacing:{after:120},children:[new TextRun('')]}));
+    }
+  });
+
+  return items;
+}
+
+function makeDocxElements(data, docxLib){
+  const {Paragraph,TextRun,Table,TableRow,TableCell,
+    BorderStyle,WidthType,ShadingType,LevelFormat,AlignmentType}=docxLib;
+  const BLUE='185FA5',BLUE_DARK='0C447C',BLUE_LIGHT='DCE9F7',WHITE='FFFFFF',TEXT='1A1A1A',GRAY='888780';
+  const cb={style:BorderStyle.SINGLE,size:4,color:'C8D8EC'};
+  const brd={top:cb,bottom:cb,left:cb,right:cb};
+  const items=[];
+
+  if(typeof data==='string') data=parseDelimiters(data);
+  if(!data||!data.subsections) return items;
+
+  if(data.summary){
+    items.push(new Paragraph({
+      shading:{fill:'EEF5FC',type:ShadingType.CLEAR},
+      spacing:{before:0,after:160},indent:{left:200,right:200},
+      children:[new TextRun({text:data.summary,size:21,color:BLUE_DARK,font:'맑은 고딕',italics:true})]
+    }));
+  }
+
+  (data.subsections||[]).forEach(function(sub){
+    if(sub.heading){
+      items.push(new Paragraph({
+        spacing:{before:280,after:100},
+        border:{left:{style:BorderStyle.SINGLE,size:16,color:BLUE_DARK,space:8}},
+        children:[new TextRun({text:sub.heading,bold:true,size:26,color:BLUE_DARK,font:'맑은 고딕'})]
+      }));
+    }
+    if(sub.insight){
+      items.push(new Paragraph({
+        shading:{fill:'EEF5FC',type:ShadingType.CLEAR},
+        spacing:{before:80,after:80},indent:{left:200,right:200},
+        children:[new TextRun({text:'💡 '+sub.insight,size:20,color:BLUE_DARK,font:'맑은 고딕',italics:true})]
+      }));
+    }
+    if(sub.stats&&sub.stats.length){
+      var colW=Math.floor(9026/Math.min(sub.stats.length,4));
+      items.push(new Table({
+        width:{size:9026,type:WidthType.DXA},
+        columnWidths:sub.stats.slice(0,4).map(function(){return colW;}),
+        rows:[new TableRow({children:sub.stats.slice(0,4).map(function(s){
+          return new TableCell({
+            borders:brd,shading:{fill:BLUE_LIGHT,type:ShadingType.CLEAR},
+            margins:{top:120,bottom:120,left:200,right:200},
+            children:[
+              new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:s.value+(s.unit?' '+s.unit:''),bold:true,size:32,color:BLUE_DARK,font:'맑은 고딕'})]}),
+              new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:s.label,size:18,color:GRAY,font:'맑은 고딕'})]})
+            ]
+          });
+        })})]
+      }));
+      items.push(new Paragraph({spacing:{after:80},children:[new TextRun('')]}));
+    }
+    (sub.paragraphs||[]).forEach(function(p){
+      items.push(new Paragraph({spacing:{after:120},children:[new TextRun({text:p,size:22,color:TEXT,font:'맑은 고딕'})]}));
+    });
+    (sub.bullets||[]).forEach(function(b){
+      items.push(new Paragraph({
+        numbering:{reference:'bullets',level:0},spacing:{after:60},
+        children:[new TextRun({text:b,size:22,color:TEXT,font:'맑은 고딕'})]
+      }));
+    });
+    (sub.tables||[]).forEach(function(tbl){
+      var colCount=tbl.headers.length;
+      var colW2=Math.floor(9026/colCount);
+      var tRows=[
+        new TableRow({tableHeader:true,children:tbl.headers.map(function(h){
+          return new TableCell({borders:brd,shading:{fill:BLUE_DARK,type:ShadingType.CLEAR},
+            margins:{top:80,bottom:80,left:160,right:160},
+            children:[new Paragraph({children:[new TextRun({text:h,bold:true,size:20,color:WHITE,font:'맑은 고딕'})]})]});
+        })})
+      ].concat(tbl.rows.map(function(row,ri){
+        return new TableRow({children:row.map(function(cell){
+          return new TableCell({borders:brd,shading:{fill:ri%2===1?'F5F8FC':'FFFFFF',type:ShadingType.CLEAR},
+            margins:{top:80,bottom:80,left:160,right:160},
+            children:[new Paragraph({children:[new TextRun({text:String(cell),size:20,color:TEXT,font:'맑은 고딕'})]})]});
+        })});
+      }));
+      items.push(new Table({width:{size:9026,type:WidthType.DXA},columnWidths:Array(colCount).fill(colW2),rows:tRows}));
+      items.push(new Paragraph({spacing:{after:120},children:[new TextRun('')]}));
+    });
+  });
+  return items;
+}
+
+function downloadDocx(){
+  if(typeof docx==='undefined'){alert('Word 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.');return;}
+  try{
+    var D=docx;
+    var Document=D.Document,Packer=D.Packer,Paragraph=D.Paragraph,TextRun=D.TextRun,
+      Table=D.Table,TableRow=D.TableRow,TableCell=D.TableCell,
+      HeadingLevel=D.HeadingLevel,AlignmentType=D.AlignmentType,
+      BorderStyle=D.BorderStyle,WidthType=D.WidthType,ShadingType=D.ShadingType,
+      PageBreak=D.PageBreak,Footer=D.Footer,TabStopType=D.TabStopType,
+      PageNumber=D.PageNumber,LevelFormat=D.LevelFormat;
+
+    var company=document.getElementById('companyName').value||'기업';
+    var region=document.getElementById('region').value||'지역';
+    var cats=getT('catTags').join(', ')||'식품';
+    var certs=getT('certTags').join(', ')||'없음';
+    var exportExp=document.getElementById('exportExp').value||'-';
+    var exportGoal=document.getElementById('exportGoal').value||'-';
+    var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+    var BLUE='185FA5',BLUE_DARK='0C447C',BLUE_LIGHT='DCE9F7',TEXT='1A1A1A',GRAY='888780',WHITE='FFFFFF';
+    var cb2={style:BorderStyle.SINGLE,size:4,color:'C8D8EC'};
+    var brd2={top:cb2,bottom:cb2,left:cb2,right:cb2};
+
+    // 표지
+    var coverChildren=[
+      new Paragraph({children:[new TextRun('')]}),
+      new Paragraph({children:[new TextRun('')]}),
+      new Paragraph({children:[new TextRun('')]}),
+      new Paragraph({children:[new TextRun('')]}),
+      new Paragraph({children:[new TextRun('')]}),
+      new Paragraph({children:[new TextRun('')]}),
+      new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:32,color:BLUE_DARK,space:1}},spacing:{after:0},
+        children:[new TextRun({text:'TRIDGE DATA INTELLIGENCE',size:20,color:GRAY,font:'맑은 고딕',characterSpacing:300})]}),
+      new Paragraph({spacing:{after:0},children:[new TextRun('')]}),
+      new Paragraph({spacing:{after:80},children:[new TextRun({text:'해외수출전략보고서',bold:true,size:72,color:BLUE_DARK,font:'맑은 고딕'})]}),
+      new Paragraph({spacing:{after:480},children:[new TextRun({text:'Global Export Strategy Report',size:28,color:GRAY,font:'맑은 고딕'})]}),
+      new Paragraph({spacing:{after:40},children:[new TextRun({text:region,size:28,color:GRAY,font:'맑은 고딕'})]}),
+      new Paragraph({spacing:{after:120},children:[new TextRun({text:company,bold:true,size:44,color:TEXT,font:'맑은 고딕'})]}),
+      new Paragraph({border:{top:{style:BorderStyle.SINGLE,size:8,color:'C8D8EC',space:4}},spacing:{before:80},
+        children:[
+          new TextRun({text:'작성일: '+today,size:20,color:GRAY,font:'맑은 고딕'}),
+          new TextRun({text:'          Powered by Tridge',size:20,color:BLUE,font:'맑은 고딕'})
+        ]})
+    ];
+
+    // 기업 정보 표
+    var infoData=[['기업명',company],['지역',region],['주력 제품',cats],['보유 인증',certs],['현재 수출 실적',exportExp],['수출 목표',exportGoal]];
+    var infoRows=infoData.map(function(kv,i){
+      return new TableRow({children:[
+        new TableCell({borders:brd2,width:{size:2800,type:WidthType.DXA},
+          shading:{fill:i===0?BLUE_DARK:BLUE_LIGHT,type:ShadingType.CLEAR},
+          margins:{top:100,bottom:100,left:200,right:200},
+          children:[new Paragraph({children:[new TextRun({text:kv[0],bold:true,size:21,color:i===0?WHITE:BLUE_DARK,font:'맑은 고딕'})]})]
+        }),
+        new TableCell({borders:brd2,width:{size:6226,type:WidthType.DXA},
+          margins:{top:100,bottom:100,left:200,right:200},
+          children:[new Paragraph({children:[new TextRun({text:kv[1]||'-',size:21,color:TEXT,font:'맑은 고딕'})]})]
+        })
+      ]});
+    });
+
+    // 푸터
+    var footer=new Footer({children:[
+      new Paragraph({
+        tabStops:[{type:TabStopType.CENTER,position:4500},{type:TabStopType.RIGHT,position:9026}],
+        border:{top:{style:BorderStyle.SINGLE,size:2,color:'C8D8EC',space:2}},spacing:{before:60},
+        children:[
+          new TextRun({text:'Powered by Tridge Data Intelligence',size:17,color:GRAY,font:'맑은 고딕'}),
+          new TextRun({text:'\t',size:17}),
+          new TextRun({text:company+' 해외수출전략보고서',size:17,color:GRAY,font:'맑은 고딕'}),
+          new TextRun({text:'\t',size:17}),
+          new TextRun({children:[PageNumber.CURRENT],size:17,color:BLUE,font:'맑은 고딕'})
+        ]
+      })
+    ]});
+
+    // 본문
+    var bodyChildren=[];
+    bodyChildren.push(new Paragraph({spacing:{before:0,after:200},
+      border:{bottom:{style:BorderStyle.SINGLE,size:8,color:BLUE,space:4}},
+      children:[new TextRun({text:'기업 정보 요약',bold:true,size:34,color:BLUE_DARK,font:'맑은 고딕'})]}));
+    bodyChildren.push(new Table({width:{size:9026,type:WidthType.DXA},columnWidths:[2800,6226],rows:infoRows}));
+    bodyChildren.push(new Paragraph({spacing:{after:400},children:[new TextRun('')]}));
+
+    SECTION_KEYS.forEach(function(key,idx){
+      bodyChildren.push(new Paragraph({children:[new PageBreak()]}));
+      bodyChildren.push(new Paragraph({
+        shading:{fill:BLUE_DARK,type:ShadingType.CLEAR},
+        spacing:{before:0,after:0},
+        border:{left:{style:BorderStyle.SINGLE,size:32,color:BLUE,space:0}},
+        indent:{left:200,right:200},
+        children:[
+          new TextRun({text:'0'+(idx+1)+'  ',bold:true,size:34,color:'B5D4F4',font:'맑은 고딕'}),
+          new TextRun({text:SECTION_NAMES[key],bold:true,size:34,color:WHITE,font:'맑은 고딕'})
+        ]
+      }));
+      bodyChildren.push(new Paragraph({spacing:{after:0},children:[new TextRun('')]}));
+      var items=makeDocxElements(reportSections[key],docx);
+      items.forEach(function(item){bodyChildren.push(item);});
+    });
+
+    var doc=new Document({
+      numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'▸',
+        alignment:AlignmentType.LEFT,
+        style:{paragraph:{indent:{left:480,hanging:240}},run:{font:'맑은 고딕',size:22,color:'185FA5'}}}]}]},
+      styles:{default:{document:{run:{font:'맑은 고딕',size:22}}}},
+      sections:[
+        {properties:{page:{size:{width:11906,height:16838},margin:{top:1800,right:1700,bottom:1800,left:1700}}},children:coverChildren},
+        {properties:{page:{size:{width:11906,height:16838},margin:{top:1440,right:1440,bottom:1800,left:1800}}},footers:{default:footer},children:bodyChildren}
+      ]
+    });
+    Packer.toBlob(doc).then(function(blob){
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=company+'_수출전략보고서.docx';
+      a.click();
+    }).catch(function(e){alert('Word 저장 오류: '+e.message);});
+  } catch(e){console.error(e);alert('Word 파일 생성 오류: '+e.message);}
+}
+
+function downloadHtml(){
+  var company=document.getElementById('companyName').value||'기업';
+  var region=document.getElementById('region').value||'지역';
+  var cats=getT('catTags').join(', ')||'식품';
+  var certs=getT('certTags').join(', ')||'없음';
+  var exportExp=document.getElementById('exportExp').value||'-';
+  var exportGoal=document.getElementById('exportGoal').value||'-';
+  var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  var SECTION_NUMS=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ'];
+
+  function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  function renderPage(key, idx, data){
+    if(!data) return '';
+    if(typeof data==='string') data=parseDelimiters(data);
+    var num=SECTION_NUMS[idx];
+    var sname=SECTION_NAMES[key];
+    var bodyHtml='';
+
+    // summary → finding 스타일
+    if(data.summary){
+      bodyHtml+='<div class="finding"><div class="finding-lbl">SECTION SUMMARY</div><div class="finding-txt">'+escHtml(data.summary)+'</div></div>';
+    }
+
+    (data.subsections||[]).forEach(function(sub){
+      if(sub.heading){
+        bodyHtml+='<div class="sub-h">'+escHtml(sub.heading)+'</div>';
+      }
+
+      // stats → kpi-row
+      if(sub.stats&&sub.stats.length){
+        bodyHtml+='<div class="kpi-row">';
+        sub.stats.slice(0,3).forEach(function(s){
+          var icon=s.trend==='up'?'ti-trending-up':s.trend==='down'?'ti-trending-down':'ti-chart-bar';
+          bodyHtml+='<div class="kpi-card">'
+            +'<div class="kpi-icon"><i class="ti '+icon+'"></i></div>'
+            +'<div class="kpi-num">'+escHtml(s.value)+'<span class="kpi-unit">'+escHtml(s.unit||'')+'</span></div>'
+            +'<div class="kpi-lbl">'+escHtml(s.label)+'</div>'
+            +'</div>';
+        });
+        bodyHtml+='</div>';
+        // 4개 이상이면 추가 행
+        if(sub.stats.length>3){
+          bodyHtml+='<div class="kpi-row">';
+          sub.stats.slice(3,6).forEach(function(s){
+            var icon=s.trend==='up'?'ti-trending-up':s.trend==='down'?'ti-trending-down':'ti-chart-bar';
+            bodyHtml+='<div class="kpi-card">'
+              +'<div class="kpi-icon"><i class="ti '+icon+'"></i></div>'
+              +'<div class="kpi-num">'+escHtml(s.value)+'<span class="kpi-unit">'+escHtml(s.unit||'')+'</span></div>'
+              +'<div class="kpi-lbl">'+escHtml(s.label)+'</div>'
+              +'</div>';
+          });
+          bodyHtml+='</div>';
+        }
+      }
+
+      // insight → finding blue
+      if(sub.insight){
+        bodyHtml+='<div class="finding blue"><div class="finding-lbl" style="color:#185FA5">KEY INSIGHT</div><div class="finding-txt">'+escHtml(sub.insight)+'</div></div>';
+      }
+
+      // paragraphs
+      (sub.paragraphs||[]).forEach(function(p){
+        bodyHtml+='<div class="body-p">'+escHtml(p)+'</div>';
+      });
+
+      // bullets → pain-row 스타일
+      if(sub.bullets&&sub.bullets.length){
+        sub.bullets.forEach(function(b){
+          bodyHtml+='<div class="pain-row"><div class="bullet-dot">▸</div><div class="pain-main">'+escHtml(b)+'</div></div>';
+        });
+      }
+
+      // table
+      if(sub.tables&&sub.tables.length){
+        sub.tables.forEach(function(tbl){
+          bodyHtml+='<div style="overflow-x:auto;margin:14px 0"><table class="data-tbl">'
+            +'<thead><tr>'+tbl.headers.map(function(h){return '<th>'+escHtml(h)+'</th>';}).join('')+'</tr></thead>'
+            +'<tbody>'+tbl.rows.map(function(row,ri){
+              return '<tr'+(ri%2===1?' class="alt"':'')+'>'
+                +row.map(function(c){return '<td>'+escHtml(c)+'</td>';}).join('')
+                +'</tr>';
+            }).join('')+'</tbody>'
+            +'</table></div>';
+        });
+      }
+    });
+
+    return '<div class="a4">'
+      +'<div class="page-top-bar"></div>'
+      +'<div class="page-inner">'
+      +'<div class="page-nav">'
+      +'<span class="nav-section">'+num+' · '+escHtml(sname)+'</span>'
+      +'<div class="nav-right"><span class="nav-logo">tridge<em>.</em></span><span class="nav-page">p. '+(idx+3)+'</span></div>'
+      +'</div>'
+      +'<div class="section-eyebrow">'+escHtml(sname.toUpperCase())+'</div>'
+      +'<div class="section-h">'+escHtml(sname)+'</div>'
+      +''+bodyHtml
+      +'</div>'
+      +'<div class="footer-bar"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge. All rights reserved.</span></div>'
+      +'</div>';
+  }
+
+  // 목차 생성
+  var tocRows=SECTION_KEYS.map(function(key,idx){
+    var num=SECTION_NUMS[idx];
+    var isMain=(idx===3);
+    return '<div class="toc-row">'
+      +'<div class="toc-idx'+(isMain?' hl':'')+'">'+num+'</div>'
+      +'<div class="toc-body">'
+      +'<div class="toc-title'+(isMain?' hl':'')+'">'+(isMain?'★ ':'')+escHtml(SECTION_NAMES[key])+(isMain?' ★':'')+'</div>'
+      +'<div class="toc-desc">'+escHtml(['보고서 목적 · 글로벌 성공 가능성 · 핵심 타겟 국가',
+        '제주 프리미엄 가치 · 물류비 분석 · 트릿지 솔루션',
+        '최근 3년 수출입 변화 · 바이어 검색 트렌드 · 경쟁 지역',
+        '스코어링 방법론 · 타겟 국가 수입 트렌드 · 현지 거래가 · 바이어 소싱 기준',
+        'Ark AI · 디지털 쇼룸 · 바이어 페르소나 · 프라이싱 가이드',
+        '3단계 타임라인 · 트릿지 지원 솔루션 · 수출바우처 연계'][idx])+'</div>'
+      +'</div>'
+      +'<div class="toc-pg">'+(idx+3)+'</div>'
+      +'</div>';
+  }).join('');
+
+  var allPages=SECTION_KEYS.map(function(k,i){return renderPage(k,i,reportSections[k]);}).join('');
+
+  // Chart 데이터
+  var chartStats=[];
+  var chartLabel='핵심 지표';
+  SECTION_KEYS.forEach(function(key){
+    var data=reportSections[key];
+    if(!data||chartStats.length) return;
+    if(typeof data==='string') data=parseDelimiters(data);
+    (data.subsections||[]).forEach(function(sub){
+      if(sub.stats&&sub.stats.length>=3&&!chartStats.length){
+        chartStats=sub.stats.slice(0,6);
+        chartLabel=sub.heading||'핵심 지표';
+      }
+    });
+  });
+
+  var chartScript='';
+  if(chartStats.length){
+    var clabels=JSON.stringify(chartStats.map(function(s){return s.label;}));
+    var cvals=JSON.stringify(chartStats.map(function(s){return parseFloat(String(s.value).replace(/[^0-9.]/g,''))||0;}));
+    chartScript='<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>\n'
+      +'<script>\n'
+      +'(function(){\n'
+      +'var el=document.getElementById("mainChart");if(!el||typeof Chart==="undefined") return;\n'
+      +'new Chart(el,{type:"bar",data:{labels:'+clabels+',datasets:[{data:'+cvals+',backgroundColor:"#0B7C5B",borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888",font:{size:10}},grid:{display:false}},y:{ticks:{color:"#888",font:{size:10}},grid:{color:"rgba(0,0,0,0.06)"}}}}});\n'
+      +'})();\n'
+      +'<\/script>';
+  }
+
+  var chartPage='';
+  if(chartStats.length){
+    chartPage='<div class="a4">'
+      +'<div class="page-top-bar"></div>'
+      +'<div class="page-inner">'
+      +'<div class="page-nav"><span class="nav-section">데이터 시각화</span>'
+      +'<div class="nav-right"><span class="nav-logo">tridge<em>.</em></span><span class="nav-page">p. 2</span></div></div>'
+      +'<div class="section-eyebrow">DATA VISUALIZATION</div>'
+      +'<div class="section-h">핵심 지표 시각화</div>'
+      +'<div class="section-lead">AI가 추출한 보고서 핵심 수치 데이터</div>'
+      +'<div style="position:relative;height:320px;width:100%"><canvas id="mainChart" role="img" aria-label="핵심 지표 차트"></canvas></div>'
+      +'</div>'
+      +'<div class="footer-bar"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge. All rights reserved.</span></div>'
+      +'</div>';
+  }
+
+  var html='<!DOCTYPE html>\n<html lang="ko">\n<head>\n'
+    +'<meta charset="UTF-8">\n'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
+    +'<title>'+company+' 해외수출전략보고서 — Tridge</title>\n'
+    +'<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">\n'
+    +'<style>\n'
+    +'*{box-sizing:border-box;margin:0;padding:0}\n'
+    +'body{font-family:"Apple SD Gothic Neo","맑은 고딕","Malgun Gothic",Arial,sans-serif;background:#EDECEA}\n'
+    +'.a4-wrap{width:100%;display:flex;flex-direction:column;align-items:center;gap:32px;padding:32px 16px 48px;background:#EDECEA}\n'
+    +'.a4{width:794px;min-height:1123px;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.13);border-radius:3px;position:relative;display:flex;flex-direction:column;overflow:hidden}\n'
+    +'.cover{background:#0B2D4E;min-height:1123px}\n'
+    +'.cover-header{padding:40px 56px 0;display:flex;justify-content:space-between;align-items:center}\n'
+    +'.cover-logo{font-size:17px;font-weight:700;color:#fff;letter-spacing:0.1em}\n'
+    +'.cover-logo em{color:#3ECFA4;font-style:normal}\n'
+    +'.cover-badge{font-size:10px;color:#3ECFA4;border:1px solid rgba(62,207,164,0.5);border-radius:20px;padding:5px 16px;letter-spacing:0.1em}\n'
+    +'.cover-hero{flex:1;padding:88px 56px 0;display:flex;flex-direction:column}\n'
+    +'.cover-eyebrow{font-size:11px;color:#3ECFA4;letter-spacing:0.14em;font-weight:500;margin-bottom:20px}\n'
+    +'.cover-bar{width:48px;height:3px;background:#3ECFA4;border-radius:2px;margin-bottom:26px}\n'
+    +'.cover-title{font-size:40px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:16px}\n'
+    +'.cover-title em{color:#3ECFA4;font-style:normal}\n'
+    +'.cover-sub{font-size:14px;color:rgba(255,255,255,0.55);line-height:1.85;margin-bottom:72px;max-width:480px}\n'
+    +'.cover-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden}\n'
+    +'.cover-stat{background:rgba(255,255,255,0.04);padding:26px 20px;text-align:center}\n'
+    +'.cover-stat-n{font-size:30px;font-weight:700;color:#fff}\n'
+    +'.cover-stat-n span{font-size:13px;color:#3ECFA4;font-weight:400;margin-left:3px}\n'
+    +'.cover-stat-l{font-size:11px;color:rgba(255,255,255,0.45);margin-top:5px}\n'
+    +'.cover-img-band{margin-top:auto;height:200px;background:linear-gradient(180deg,#0B2D4E 0%,#0B3D2E 60%,#0A4F38 100%);position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:0 56px}\n'
+    +'.cover-footer-inner{width:100%;display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:40px;position:relative;z-index:2}\n'
+    +'.cover-foot-left p,.cover-foot-right p{font-size:11px;color:rgba(255,255,255,0.3);line-height:1.85}\n'
+    +'.cover-foot-right{text-align:right}\n'
+    +'.page-top-bar{height:6px;background:#0B7C5B;width:100%;flex-shrink:0}\n'
+    +'.page-inner{flex:1;display:flex;flex-direction:column;padding:0 56px 44px}\n'
+    +'.page-nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0 16px;border-bottom:0.5px solid #e4e4e0;margin-bottom:28px}\n'
+    +'.nav-section{font-size:10px;color:#999;letter-spacing:0.1em;font-weight:500;text-transform:uppercase}\n'
+    +'.nav-right{display:flex;align-items:center;gap:12px}\n'
+    +'.nav-logo{font-size:11px;font-weight:700;color:#0B7C5B;letter-spacing:0.08em}\n'
+    +'.nav-logo em{color:#3ECFA4;font-style:normal}\n'
+    +'.nav-page{font-size:10px;color:#bbb}\n'
+    +'.section-eyebrow{font-size:10px;font-weight:600;color:#0B7C5B;letter-spacing:0.12em;margin-bottom:7px}\n'
+    +'.section-h{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:7px;line-height:1.3}\n'
+    +'.section-lead{font-size:12px;color:#888;line-height:1.75;margin-bottom:24px;border-bottom:0.5px solid #e4e4e0;padding-bottom:20px}\n'
+    +'.toc-row{display:flex;align-items:center;gap:16px;padding:13px 0;border-bottom:0.5px solid #f2f2ee}\n'
+    +'.toc-idx{width:28px;height:28px;background:#0B2D4E;color:#fff;font-size:11px;font-weight:700;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}\n'
+    +'.toc-idx.hl{background:#0B7C5B}\n'
+    +'.toc-body{flex:1}\n'
+    +'.toc-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:3px}\n'
+    +'.toc-title.hl{color:#0B7C5B}\n'
+    +'.toc-desc{font-size:11px;color:#999;line-height:1.55}\n'
+    +'.toc-pg{font-size:12px;color:#bbb;min-width:22px;text-align:right}\n'
+    +'.kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px}\n'
+    +'.kpi-card{background:#f7f7f5;border-radius:8px;padding:16px 14px}\n'
+    +'.kpi-icon{font-size:18px;color:#0B7C5B;margin-bottom:8px}\n'
+    +'.kpi-num{font-size:24px;font-weight:700;color:#1a1a1a;line-height:1}\n'
+    +'.kpi-unit{font-size:12px;color:#0B7C5B;font-weight:600;margin-left:2px}\n'
+    +'.kpi-lbl{font-size:10px;color:#999;margin-top:5px;line-height:1.4}\n'
+    +'.finding{border-left:3px solid #0B7C5B;background:#f4faf8;border-radius:0 7px 7px 0;padding:12px 15px;margin-bottom:10px}\n'
+    +'.finding.blue{border-left-color:#185FA5;background:#f0f6fc}\n'
+    +'.finding-lbl{font-size:9px;font-weight:700;color:#0B7C5B;letter-spacing:0.1em;margin-bottom:5px}\n'
+    +'.finding-txt{font-size:12px;color:#2a2a2a;line-height:1.75}\n'
+    +'.sub-h{font-size:13px;font-weight:700;color:#0B2D4E;margin:18px 0 8px;padding-left:10px;border-left:3px solid #0B7C5B}\n'
+    +'.sub-h:first-child{margin-top:0}\n'
+    +'.body-p{font-size:12px;color:#333;line-height:1.85;margin-bottom:8px;word-break:keep-all}\n'
+    +'.pain-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid #f2f2ee}\n'
+    +'.bullet-dot{font-size:12px;color:#0B7C5B;font-weight:700;flex-shrink:0;margin-top:1px}\n'
+    +'.pain-main{font-size:11.5px;color:#2a2a2a;line-height:1.65;word-break:keep-all}\n'
+    +'.data-tbl{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed}\n'
+    +'.data-tbl th{background:#0B2D4E;color:#fff;padding:8px 10px;text-align:left;font-weight:600;white-space:nowrap}\n'
+    +'.data-tbl td{padding:7px 10px;border:1px solid #e8e8e4;word-break:keep-all;vertical-align:top;line-height:1.5}\n'
+    +'.data-tbl tr.alt td{background:#f7f7f5}\n'
+    +'.footer-bar{height:38px;background:#0B2D4E;display:flex;align-items:center;justify-content:space-between;padding:0 56px;flex-shrink:0}\n'
+    +'.footer-bar span{font-size:10px;color:rgba(255,255,255,0.35)}\n'
+    +'@media print{body{background:#fff}.a4-wrap{padding:0;gap:0;background:#fff}.a4{box-shadow:none;border-radius:0;page-break-after:always;width:100%;min-height:auto}@page{margin:0;size:A4}}\n'
+    +'</style>\n'
+    +'</head>\n<body>\n<div class="a4-wrap">\n'
+
+    // 표지
+    +'<div class="a4 cover">'
+    +'<div class="cover-header"><div class="cover-logo">tridge<em>.</em></div><div class="cover-badge">CONFIDENTIAL · 2026</div></div>'
+    +'<div class="cover-hero">'
+    +'<div class="cover-eyebrow">GLOBAL MARKET INTELLIGENCE REPORT</div>'
+    +'<div class="cover-bar"></div>'
+    +'<div class="cover-title">'+escHtml(company)+'<br><em>해외수출전략보고서</em></div>'
+    +'<div class="cover-sub">트릿지 글로벌 거래 데이터 기반 · 유망 타겟 국가 Top 3 선정<br>B2B 바이어 매칭 및 실전 수출 액션플랜 포함</div>'
+    +'<div class="cover-stats">'
+    +'<div class="cover-stat"><div class="cover-stat-n">140<span>개국+</span></div><div class="cover-stat-l">거래 데이터 커버리지</div></div>'
+    +'<div class="cover-stat"><div class="cover-stat-n">2.3M<span>건+</span></div><div class="cover-stat-l">글로벌 실거래 데이터</div></div>'
+    +'<div class="cover-stat"><div class="cover-stat-n">Top 3<span>국가</span></div><div class="cover-stat-l">데이터 기반 타겟 선정</div></div>'
+    +'</div></div>'
+    +'<div class="cover-img-band"><div class="cover-footer-inner">'
+    +'<div class="cover-foot-left"><p>Prepared by Tridge Export Solutions</p><p>'+escHtml(region)+' | '+escHtml(company)+'</p></div>'
+    +'<div class="cover-foot-right"><p>'+today+'</p><p>기밀 — 수신자 외 배포 금지</p></div>'
+    +'</div></div>'
+    +'<div class="footer-bar"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge. All rights reserved.</span></div>'
+    +'</div>\n'
+
+    // 목차
+    +'<div class="a4">'
+    +'<div class="page-top-bar"></div>'
+    +'<div class="page-inner">'
+    +'<div class="page-nav"><span class="nav-section">Table of Contents</span>'
+    +'<div class="nav-right"><span class="nav-logo">tridge<em>.</em></span><span class="nav-page">p. 2</span></div></div>'
+    +'<div class="section-eyebrow">CONTENTS</div>'
+    +'<div class="section-h">목차</div>'
+    +'<div class="section-lead">트릿지 데이터 인텔리전스 기반 '+escHtml(region)+' 식품 글로벌 진출 전략</div>'
+    +tocRows
+    +'</div>'
+    +'<div class="footer-bar"><span>Tridge Export Solutions · Confidential</span><span>© 2026 Tridge. All rights reserved.</span></div>'
+    +'</div>\n'
+
+    // 차트 페이지
+    +chartPage
+
+    // 섹션 페이지들
+    +allPages
+
+    +'</div>\n'
+    +chartScript
+    +'\n</body>\n</html>';
+
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=company+'_수출전략보고서.html';
+  a.click();
+}
+
+</script>
+</body>
+</html>
