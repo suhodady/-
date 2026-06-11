@@ -782,100 +782,163 @@ function handleTridge(files){
           }
           return null;
         }
-        const COL_DATE=findCol(['Date','날짜']);
+        const COL_DATE=findCol(['Date','날짜','date']);
         const COL_IMPORT=findCol(['Import Country','수입국']);
         const COL_EXPORT=findCol(['Export Country','수출국']);
         const COL_ORIGIN=findCol(['Origin Country','원산지']);
         const COL_PRODUCT=findCol(['Reported Product Name','Product Name','품목']);
-        const COL_VALUE=findCol(['Value','금액']);
-        const COL_VOLUME=findCol(['Volume','수량']);
-        const COL_UNIT_PRICE=findCol(['Unit Price','단가']);
-        const COL_UNIT=findCol(['Unit','단위']);
-        const COL_IMPORTER=findCol(['Importer','수입업체']);
+        // Value 컬럼 — "confirmed/estimated" 컬럼과 혼동 방지: 정확히 'Value'만 매칭
+        const COL_VALUE=keys.find(k=>k.trim()==='Value')||findCol(['Value(USD)','금액(USD)','금액']);
+        const COL_VOLUME=keys.find(k=>k.trim()==='Volume')||findCol(['Volume(KG)','수량(KG)','수량']);
+        const COL_UNIT_PRICE=keys.find(k=>k.trim()==='Unit Price')||findCol(['Unit Price($/kg)','UnitPrice','단가']);
+        const COL_UNIT=keys.find(k=>k.trim()==='Unit')||findCol(['단위']);
+        const COL_IMPORTER=findCol(['Importer','수입업체','Raw Importer']);
         const COL_EXPORTER=findCol(['Exporter','수출업체']);
 
         // 유효 데이터 필터링
-        const valid=rows.filter(r=>{
+        // ── 트랙 1: 가격+볼륨 있는 데이터 ──
+        const trackA=rows.filter(r=>{
           const price=parseFloat(r[COL_UNIT_PRICE]);
           const vol=parseFloat(r[COL_VOLUME]);
-          return price>0&&vol>0&&!isNaN(price)&&!isNaN(vol);
+          return !isNaN(price)&&!isNaN(vol)&&price>0&&vol>0;
         });
 
-        if(!valid.length){
+        // ── 트랙 2: 가격/볼륨 N/A지만 바이어 있는 데이터 ──
+        const trackB=rows.filter(r=>{
+          const price=parseFloat(r[COL_UNIT_PRICE]);
+          const vol=parseFloat(r[COL_VOLUME]);
+          const hasPrice=!isNaN(price)&&price>0;
+          const hasVol=!isNaN(vol)&&vol>0;
+          const hasImporter=r[COL_IMPORTER]&&String(r[COL_IMPORTER]).trim().length>0;
+          return (!hasPrice||!hasVol)&&hasImporter;
+        });
+
+        let summaryA='', summaryB='';
+
+        // ── 트랙 1 분석 (가격+볼륨) ──
+        if(trackA.length>0){
+          // IQR 이상치 제거 (5th~95th percentile)
+          const prices=trackA.map(r=>parseFloat(r[COL_UNIT_PRICE])).sort((a,b)=>a-b);
+          const p5=prices[Math.floor(prices.length*0.05)];
+          const p95=prices[Math.floor(prices.length*0.95)];
+          const cleaned=trackA.filter(r=>{
+            const p=parseFloat(r[COL_UNIT_PRICE]);
+            return p>=p5&&p<=p95;
+          });
+
+          // 국가별 분석
+          const byCountry={};
+          cleaned.forEach(function(r){
+            const country=r[COL_IMPORT]||r[COL_EXPORT]||r[COL_ORIGIN]||'Unknown';
+            if(!byCountry[country]) byCountry[country]={vol:0,val:0,count:0,importers:new Set(),months:{}};
+            const vol=parseFloat(r[COL_VOLUME])||0;
+            const price=parseFloat(r[COL_UNIT_PRICE])||0;
+            byCountry[country].vol+=vol;
+            byCountry[country].val+=vol*price;
+            byCountry[country].count++;
+            if(r[COL_IMPORTER]) byCountry[country].importers.add(r[COL_IMPORTER]);
+            // 월별 계절성
+            const date=String(r[COL_DATE]||'');
+            const month=date.substring(5,7);
+            if(month) byCountry[country].months[month]=(byCountry[country].months[month]||0)+1;
+          });
+
+          // 연도별 분석
+          const byYear={};
+          cleaned.forEach(function(r){
+            const date=String(r[COL_DATE]||'');
+            const year=date.substring(0,4);
+            if(!year||isNaN(year)) return;
+            if(!byYear[year]) byYear[year]={vol:0,val:0,count:0};
+            const vol=parseFloat(r[COL_VOLUME])||0;
+            const price=parseFloat(r[COL_UNIT_PRICE])||0;
+            byYear[year].vol+=vol;
+            byYear[year].val+=vol*price;
+            byYear[year].count++;
+          });
+
+          // TOP 5 국가
+          const countryRanked=Object.entries(byCountry)
+            .map(([c,d])=>{
+              const vwap=d.vol>0?d.val/d.vol:0;
+              const peakMonth=Object.entries(d.months).sort((a,b)=>b[1]-a[1])[0];
+              return {country:c,vol:d.vol,vwap,count:d.count,importers:d.importers.size,peak:peakMonth?peakMonth[0]+'월':'-'};
+            })
+            .sort((a,b)=>b.vol-a.vol).slice(0,5);
+
+          // 연도별 트렌드
+          const yearRows=Object.entries(byYear).sort((a,b)=>a[0].localeCompare(b[0]));
+          const yearTrend=yearRows.map(([y,d])=>y+': '+Math.round(d.vol).toLocaleString()+'kg / VWAP $'+(d.vol>0?d.val/d.vol:0).toFixed(2)+'/kg ('+d.count+'건)');
+
+          // 성장률
+          let growthNote='';
+          if(yearRows.length>=2){
+            const first=yearRows[0][1],last=yearRows[yearRows.length-1][1];
+            if(first.vol>0){
+              const growth=((last.vol-first.vol)/first.vol*100).toFixed(1);
+              growthNote='수출 물동량 성장률 ('+yearRows[0][0]+'→'+yearRows[yearRows.length-1][0]+'): '+growth+'%\n';
+            }
+          }
+
+          const totalVol=cleaned.reduce((s,r)=>s+(parseFloat(r[COL_VOLUME])||0),0);
+          const totalVal=cleaned.reduce((s,r)=>s+(parseFloat(r[COL_VOLUME])||0)*(parseFloat(r[COL_UNIT_PRICE])||0),0);
+          const globalVWAP=totalVol>0?(totalVal/totalVol).toFixed(2):'N/A';
+
+          summaryA='[트랙1: 가격·볼륨 데이터 분석]\n'
+            +'총 거래: '+trackA.length+'건 → 이상치 제거 후 '+cleaned.length+'건\n'
+            +'전체 VWAP: $'+globalVWAP+'/kg (범위: $'+p5.toFixed(2)+'~$'+p95.toFixed(2)+')\n'
+            +growthNote
+            +'\n[국가별 수출 현황 TOP 5 — 가격·볼륨 기반]\n'
+            +countryRanked.map(c=>'· '+c.country+': '
+              +Math.round(c.vol).toLocaleString()+'kg, VWAP $'+c.vwap.toFixed(2)+'/kg'
+              +', '+c.count+'건, 바이어 '+c.importers+'개사, 성수기 '+c.peak
+            ).join('\n')
+            +'\n\n[연도별 수출 트렌드]\n'+yearTrend.join('\n');
+        }
+
+        // ── 트랙 2 분석 (바이어 특정) ──
+        if(trackB.length>0){
+          const buyerByCountry={};
+          trackB.forEach(function(r){
+            const country=r[COL_IMPORT]||r[COL_EXPORT]||r[COL_ORIGIN]||'Unknown';
+            const importer=String(r[COL_IMPORTER]||'').trim();
+            if(!buyerByCountry[country]) buyerByCountry[country]={importers:new Set(),count:0,years:new Set()};
+            if(importer) buyerByCountry[country].importers.add(importer);
+            buyerByCountry[country].count++;
+            const year=String(r[COL_DATE]||'').substring(0,4);
+            if(year&&!isNaN(year)) buyerByCountry[country].years.add(year);
+          });
+
+          const buyerRanked=Object.entries(buyerByCountry)
+            .sort((a,b)=>b[1].count-a[1].count).slice(0,5);
+
+          summaryB='\n[트랙2: N/A 데이터 — 바이어 특정 분석]\n'
+            +'단가/볼륨 미공개 거래: '+trackB.length+'건\n'
+            +'[국가별 바이어 현황]\n'
+            +buyerRanked.map(([c,d])=>{
+              const topBuyers=[...d.importers].slice(0,3).join(', ');
+              return '· '+c+': '+d.count+'건, 바이어 '+d.importers.size+'개사'
+                +(topBuyers?', 주요 바이어: '+topBuyers:'')
+                +(d.years.size?', 거래 연도: '+ [...d.years].sort().join('/'):'');
+            }).join('\n');
+        }
+
+        // 둘 다 없으면 에러
+        if(!trackA.length&&!trackB.length){
           if(statusEl) statusEl.textContent='⚠️ 유효 데이터 없음';
-          tridgeData+='['+f.name+'] 유효한 가격/수량 데이터 없음\n';
+          tridgeData+='['+f.name+'] 유효한 데이터 없음\n';
           return;
         }
 
-        // IQR 이상치 제거 (5th~95th percentile)
-        const prices=valid.map(r=>parseFloat(r[COL_UNIT_PRICE])).sort((a,b)=>a-b);
-        const p5=prices[Math.floor(prices.length*0.05)];
-        const p95=prices[Math.floor(prices.length*0.95)];
-        const cleaned=valid.filter(r=>{
-          const p=parseFloat(r[COL_UNIT_PRICE]);
-          return p>=p5&&p<=p95;
-        });
+        const finalSummary='[Tridge 실거래 데이터 분석: '+f.name+']\n'
+          +'총 행수: '+rows.length+'건 | 가격·볼륨 있음: '+trackA.length+'건 | N/A(바이어용): '+trackB.length+'건\n'
+          +summaryA+summaryB+'\n'
+          +'※ 신고된 거래 기반 데이터입니다. 웹서치 시장조사와 교차 검증하여 일치하는 내용만 보고서에 반영하세요.';
 
-        // 국가별 분석
-        const byCountry={};
-        cleaned.forEach(function(r){
-          const country=r[COL_IMPORT]||r[COL_EXPORT]||r[COL_ORIGIN]||'Unknown';
-          if(!byCountry[country]) byCountry[country]={vol:0,val:0,count:0,importers:new Set()};
-          const vol=parseFloat(r[COL_VOLUME])||0;
-          const price=parseFloat(r[COL_UNIT_PRICE])||0;
-          byCountry[country].vol+=vol;
-          byCountry[country].val+=vol*price;
-          byCountry[country].count++;
-          if(r[COL_IMPORTER]) byCountry[country].importers.add(r[COL_IMPORTER]);
-        });
-
-        // 연도별 분석
-        const byYear={};
-        cleaned.forEach(function(r){
-          const date=r[COL_DATE]||'';
-          const year=String(date).substring(0,4);
-          if(!year||isNaN(year)) return;
-          if(!byYear[year]) byYear[year]={vol:0,val:0};
-          const vol=parseFloat(r[COL_VOLUME])||0;
-          const price=parseFloat(r[COL_UNIT_PRICE])||0;
-          byYear[year].vol+=vol;
-          byYear[year].val+=vol*price;
-        });
-
-        // 상위 수입국 TOP 5
-        const countryRanked=Object.entries(byCountry)
-          .map(([c,d])=>({country:c,vol:d.vol,vwap:d.val/d.vol,count:d.count,importers:d.importers.size}))
-          .sort((a,b)=>b.vol-a.vol)
-          .slice(0,5);
-
-        // 연도별 트렌드
-        const yearTrend=Object.entries(byYear)
-          .sort((a,b)=>a[0].localeCompare(b[0]))
-          .map(([y,d])=>y+': '+Math.round(d.vol).toLocaleString()+'kg / VWAP $'+(d.val/d.vol).toFixed(2)+'/kg');
-
-        // 전체 VWAP
-        const totalVol=cleaned.reduce((s,r)=>s+(parseFloat(r[COL_VOLUME])||0),0);
-        const totalVal=cleaned.reduce((s,r)=>s+(parseFloat(r[COL_VOLUME])||0)*(parseFloat(r[COL_UNIT_PRICE])||0),0);
-        const globalVWAP=(totalVal/totalVol).toFixed(2);
-
-        // 요약 생성
-        const summary='[Tridge 실거래 데이터 분석: '+f.name+']\n'
-          +'총 거래 건수: '+valid.length+'건 (이상치 제거 후 '+cleaned.length+'건)\n'
-          +'전체 VWAP: $'+globalVWAP+'/kg\n'
-          +'가격 범위: $'+p5.toFixed(2)+' ~ $'+p95.toFixed(2)+'/kg\n\n'
-          +'[국가별 수출 현황 TOP 5]\n'
-          +countryRanked.map(function(c){
-            return '· '+c.country+': '+Math.round(c.vol).toLocaleString()+'kg'
-              +', VWAP $'+c.vwap.toFixed(2)+'/kg'
-              +', '+c.count+'건, 바이어 '+c.importers+'개사';
-          }).join('\n')+'\n\n'
-          +'[연도별 수출 트렌드]\n'
-          +yearTrend.join('\n')+'\n'
-          +'※ 이 데이터는 신고된 거래 기반이며, 웹서치 시장조사와 교차 검증하여 일치하는 내용만 보고서에 반영하세요.';
-
-        tridgeData+='\n'+summary+'\n';
-        if(statusEl) statusEl.textContent='✅ '+cleaned.length+'건 분석 완료';
-        console.log('Tridge 분석 완료:\n'+summary);
+        tridgeData+='\n'+finalSummary+'\n';
+        const totalDone=trackA.length+trackB.length;
+        if(statusEl) statusEl.textContent='✅ '+totalDone+'건 분석 완료 (가격볼륨: '+trackA.length+'건 / 바이어: '+trackB.length+'건)';
+        console.log('Tridge 분석 완료:\n'+finalSummary);
 
       } catch(err){
         console.error('Tridge 파싱 오류:', err);
