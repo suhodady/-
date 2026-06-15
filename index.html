@@ -636,7 +636,7 @@ async function analyzeDoc(){
       const r=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
         headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:8000,messages:[{role:'user',content:userContent}]})
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:16000,messages:[{role:'user',content:userContent}]})
       });
       if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
       const d=await r.json();
@@ -1080,26 +1080,26 @@ function buildPrompt(sectionKey){
       +'- 한국과의 FTA 현황, 주요 품목 관세율\n'
       +(cs?'[H2] 성공 사례\n- 유사 한국 식품 기업 수출 성공 사례 1건\n':''),
 
-    strategy:'V. Tridge B2B 플랫폼 활용 실전 수출 전략 (A4 5~6페이지 충분한 분량)\n'
-      +'[H2] 1. 디지털 쇼룸 구축 전략\n'
-      +'- Tridge 플랫폼 내 프로필 최적화 노하우\n'
-      +'[H2] 2. 타겟 바이어 페르소나 분석\n'
-      +'- 대형 유통사, 로컬 벤더, 식자재 마트 유형별 접근 전략\n'
-      +'[H2] 3. 프라이싱 전략\n'
-      +'- Tridge 실시간 가격 데이터 기반 마진율 계산'+(fob?' (희망 단가 '+fob+' 기준)':'')+(moq?', MOQ '+moq:'')+'\n'
-      +'[H2] 4. 첫 수출 성공을 위한 실전 팁\n'
-      +'- 샘플 발송 전략, 화상 미팅 준비, 계약서 체크리스트\n'
-      +(ark?'[H2] 5. Tridge Ark AI 에이전트 활용\n- 자동 바이어 매칭 프로세스 및 활용법\n':''),
+    strategy:'V. Tridge B2B 플랫폼 활용 실전 수출 전략 (A4 2~3페이지 분량)\n'
+      +'[H2] 1. 디지털 쇼룸 & 바이어 페르소나\n'
+      +'- Tridge 플랫폼 내 프로필 최적화 핵심 포인트 3가지\n'
+      +'- 대형 유통사/로컬 벤더/식자재 마트 유형별 접근 전략 요약\n'
+      +'[H2] 2. 프라이싱 전략\n'
+      +'- Tridge 가격 데이터 기반 목표 단가 설정'+(fob?' (희망 단가 '+fob+' 기준)':'')+(moq?', MOQ '+moq:'')+'\n'
+      +'- 마진율 계산 및 경쟁력 있는 가격대 제안\n'
+      +'[H2] 3. 첫 수출 실전 팁 & Ark AI 활용\n'
+      +'- 샘플 발송, 화상 미팅, 계약서 핵심 체크리스트\n'
+      +(ark?'- Tridge Ark AI 자동 바이어 매칭 활용법 (기대 효과 수치 포함)\n':''),
 
-    roadmap:'VI. 실행 로드맵 & Action Plan (A4 3~4페이지 충분한 분량)\n'
+    roadmap:'VI. 실행 로드맵 & Action Plan (A4 2~3페이지 분량)\n'
       +'[H2] 1단계: 준비기 (1~3개월)\n'
-      +'- 월별 세부 액션 아이템 (서류, 인증, 플랫폼 셋업) [TABLE]로 정리\n'
+      +'- 핵심 액션 아이템 5개 이내 [BULLET]로 작성\n'
       +'[H2] 2단계: 바이어 발굴 및 협상기 (4~6개월)\n'
-      +'- 월별 세부 액션 아이템 (첫 미팅, 샘플 발송, NDA 체결) [TABLE]로 정리\n'
+      +'- 핵심 액션 아이템 5개 이내 [BULLET]로 작성\n'
       +'[H2] 3단계: 첫 수출 달성 및 확장기 (7~12개월)\n'
-      +'- 월별 세부 액션 아이템 (첫 선적, 재계약, 신규 국가 확장) [TABLE]로 정리\n'
-      +'[H2] Tridge 제공 솔루션\n'
-      +'- 무역대행, 수출바우처지원사업, Ark 온보딩 단계별 활용 방법'
+      +'- 핵심 액션 아이템 5개 이내 [BULLET]로 작성\n'
+      +'[H2] Tridge 지원 솔루션\n'
+      +'- 수출바우처, 무역대행, Ark 온보딩 각 1~2줄 요약'
   };
 
   return '당신은 Tridge(글로벌 농식품 무역 데이터 플랫폼) 수출전략 전문가입니다.\n'
@@ -1113,6 +1113,7 @@ function buildPrompt(sectionKey){
     +'[작성 섹션]\n'+sections[sectionKey]+'\n\n'
     +'[출력 형식 - 반드시 준수]\n'
     +'아래 구분자 태그만 사용하세요. 마크다운(#,*,**,--) 절대 사용 금지.\n'
+    +'HTML 태그(<cite>,<ref>,<source> 등) 절대 사용 금지.\n'
     +'"이제 보고서를 작성합니다", "다음과 같이 작성하겠습니다" 같은 AI 독백 문구 절대 금지.\n'
     +'바로 내용부터 시작하세요.\n\n'
     +'사용 태그:\n'
@@ -1128,6 +1129,7 @@ function buildPrompt(sectionKey){
     +'각 소제목 아래 반드시 충분한 본문 내용([PARA] 또는 [BULLET] 또는 [TABLE])을 작성하세요. 소제목만 있고 내용이 없으면 안됩니다.\n'
     +'구체적 수치, 연도, 통계를 반드시 포함하세요.\n'
     +'비대립적, 해결책 중심 프레이밍.\n'
+    +'반드시 8000 토큰 이내에 모든 소제목 내용을 완성하세요. 토큰이 부족할 것 같으면 각 소제목 내용을 간결하게 줄여서라도 모든 소제목을 빠짐없이 작성하세요. 내용이 중간에 잘리는 것보다 간결하게 전체를 완성하는 게 우선입니다.\n'
     +'해당 섹션 내용만 작성하세요.';
 }
 
@@ -1138,7 +1140,7 @@ async function callAI(prompt, retry=0){
   if(selModel==='claude'){
     const key=document.getElementById('claudeKey').value;
     if(!key) throw new Error('Anthropic API 키를 입력해주세요.');
-    const body={model:'claude-sonnet-4-6',max_tokens:8000,messages:[{role:'user',content:prompt}]};
+    const body={model:'claude-sonnet-4-6',max_tokens:16000,messages:[{role:'user',content:prompt}]};
     if(dataMode!=='tridge') body.tools=[{type:'web_search_20250305',name:'web_search'}];
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -1257,17 +1259,35 @@ function parseDelimiters(raw){
 }
 
 // ── 섹션 HTML 렌더링 ──
+function stripTags(s){
+  return String(s||'')
+    .replace(/\[\/?SUMMARY\]/gi,'')
+    .replace(/\[\/?H2\]/gi,'')
+    .replace(/\[\/?PARA\]/gi,'')
+    .replace(/\[\/?BULLET\]/gi,'')
+    .replace(/\[\/?STAT\][^\[]*/gi,'')
+    .replace(/\[\/?INSIGHT\]/gi,'')
+    .replace(/\[\/?TABLE\]/gi,'')
+    .replace(/<\/?cite>/gi,'')
+    .replace(/<\/?ref>/gi,'')
+    .replace(/<\/?source>/gi,'')
+    .replace(/\*\*([^*]+)\*\*/g,'$1')
+    .replace(/\*([^*]+)\*/g,'$1')
+    .replace(/#{1,6}\s*/g,'')
+    .trim();
+}
+
 function renderSectionHtml(data){
   if(!data) return '<div style="color:#888;font-size:12px">내용 없음</div>';
   // data가 문자열이면 파싱
   if(typeof data==='string') data=parseDelimiters(data);
   let html='';
   if(data.summary){
-    html+='<div style="background:#E6F1FB;border-left:3px solid #185FA5;padding:9px 13px;border-radius:0 4px 4px 0;font-size:12px;color:#0C447C;margin-bottom:14px;line-height:1.7">'+data.summary+'</div>';
+    html+='<div style="background:#E6F1FB;border-left:3px solid #185FA5;padding:9px 13px;border-radius:0 4px 4px 0;font-size:12px;color:#0C447C;margin-bottom:14px;line-height:1.7">'+stripTags(data.summary)+'</div>';
   }
   (data.subsections||[]).forEach(function(sub){
     if(sub.heading){
-      html+='<div style="font-size:13px;font-weight:700;color:#042C53;margin:16px 0 7px;padding-left:10px;border-left:3px solid #185FA5;line-height:1.4">'+sub.heading+'</div>';
+      html+='<div style="font-size:13px;font-weight:700;color:#042C53;margin:16px 0 7px;padding-left:10px;border-left:3px solid #185FA5;line-height:1.4">'+stripTags(sub.heading)+'</div>';
     }
     if(sub.stats&&sub.stats.length){
       html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0 14px">';
@@ -1275,23 +1295,23 @@ function renderSectionHtml(data){
         const tColor=s.trend==='up'?'#1D9E75':s.trend==='down'?'#E24B4A':'#888';
         const tIcon=s.trend==='up'?'▲':s.trend==='down'?'▼':'—';
         html+='<div style="background:#F5F8FC;border:1px solid #DCE9F7;border-radius:6px;padding:12px 10px;text-align:center;position:relative">'
-          +'<div style="font-size:20px;font-weight:800;color:#0C447C;line-height:1.2">'+s.value+'<span style="font-size:11px;font-weight:500;color:#185FA5;margin-left:2px">'+s.unit+'</span></div>'
-          +'<div style="font-size:10px;color:#888;margin-top:4px;line-height:1.4">'+s.label+'</div>'
+          +'<div style="font-size:20px;font-weight:800;color:#0C447C;line-height:1.2">'+stripTags(s.value)+'<span style="font-size:11px;font-weight:500;color:#185FA5;margin-left:2px">'+stripTags(s.unit)+'</span></div>'
+          +'<div style="font-size:10px;color:#888;margin-top:4px;line-height:1.4">'+stripTags(s.label)+'</div>'
           +'<div style="position:absolute;top:7px;right:9px;font-size:10px;color:'+tColor+'">'+tIcon+'</div>'
           +'</div>';
       });
       html+='</div>';
     }
     if(sub.insight){
-      html+='<div style="background:#F5F8FC;border:1px solid #B5D4F4;border-radius:4px;padding:9px 13px;font-size:12px;color:#0C447C;margin:10px 0;font-style:italic;line-height:1.7">💡 '+sub.insight+'</div>';
+      html+='<div style="background:#F5F8FC;border:1px solid #B5D4F4;border-radius:4px;padding:9px 13px;font-size:12px;color:#0C447C;margin:10px 0;font-style:italic;line-height:1.7">💡 '+stripTags(sub.insight)+'</div>';
     }
     (sub.paragraphs||[]).forEach(function(p){
-      html+='<div style="font-size:12px;line-height:1.85;color:#2a2a2a;margin-bottom:7px;word-break:keep-all">'+p+'</div>';
+      html+='<div style="font-size:12px;line-height:1.85;color:#2a2a2a;margin-bottom:7px;word-break:keep-all">'+stripTags(p)+'</div>';
     });
     if(sub.bullets&&sub.bullets.length){
       html+='<ul style="margin:6px 0 12px;padding:0;list-style:none">';
       sub.bullets.forEach(function(b){
-        html+='<li style="font-size:12px;line-height:1.75;color:#2a2a2a;padding:2px 0 2px 18px;position:relative;word-break:keep-all"><span style="position:absolute;left:0;color:#185FA5;font-weight:700">▸</span>'+b+'</li>';
+        html+='<li style="font-size:12px;line-height:1.75;color:#2a2a2a;padding:2px 0 2px 18px;position:relative;word-break:keep-all"><span style="position:absolute;left:0;color:#185FA5;font-weight:700">▸</span>'+stripTags(b)+'</li>';
       });
       html+='</ul>';
     }
