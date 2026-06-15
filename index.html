@@ -1587,7 +1587,7 @@ function makeDocxElements(data, docxLib){
     items.push(new Paragraph({
       shading:{fill:'EEF5FC',type:ShadingType.CLEAR},
       spacing:{before:0,after:160},indent:{left:200,right:200},
-      children:[new TextRun({text:data.summary,size:21,color:BLUE_DARK,font:'맑은 고딕',italics:true})]
+      children:[new TextRun({text:stripTags(data.summary),size:21,color:BLUE_DARK,font:'맑은 고딕',italics:true})]
     }));
   }
 
@@ -1596,7 +1596,7 @@ function makeDocxElements(data, docxLib){
       items.push(new Paragraph({
         spacing:{before:280,after:100},
         border:{left:{style:BorderStyle.SINGLE,size:16,color:BLUE_DARK,space:8}},
-        children:[new TextRun({text:sub.heading,bold:true,size:26,color:BLUE_DARK,font:'맑은 고딕'})]
+        children:[new TextRun({text:stripTags(sub.heading),bold:true,size:26,color:BLUE_DARK,font:'맑은 고딕'})]
       }));
     }
     if(sub.insight){
@@ -1616,8 +1616,8 @@ function makeDocxElements(data, docxLib){
             borders:brd,shading:{fill:BLUE_LIGHT,type:ShadingType.CLEAR},
             margins:{top:120,bottom:120,left:200,right:200},
             children:[
-              new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:s.value+(s.unit?' '+s.unit:''),bold:true,size:32,color:BLUE_DARK,font:'맑은 고딕'})]}),
-              new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:s.label,size:18,color:GRAY,font:'맑은 고딕'})]})
+              new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:stripTags(s.value+(s.unit?' '+s.unit:'')),bold:true,size:32,color:BLUE_DARK,font:'맑은 고딕'})]}),
+              new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:stripTags(s.label),size:18,color:GRAY,font:'맑은 고딕'})]})
             ]
           });
         })})]
@@ -1625,12 +1625,12 @@ function makeDocxElements(data, docxLib){
       items.push(new Paragraph({spacing:{after:80},children:[new TextRun('')]}));
     }
     (sub.paragraphs||[]).forEach(function(p){
-      items.push(new Paragraph({spacing:{after:120},children:[new TextRun({text:p,size:22,color:TEXT,font:'맑은 고딕'})]}));
+      items.push(new Paragraph({spacing:{after:120},children:[new TextRun({text:stripTags(p),size:22,color:TEXT,font:'맑은 고딕'})]}));
     });
     (sub.bullets||[]).forEach(function(b){
       items.push(new Paragraph({
         numbering:{reference:'bullets',level:0},spacing:{after:60},
-        children:[new TextRun({text:b,size:22,color:TEXT,font:'맑은 고딕'})]
+        children:[new TextRun({text:stripTags(b),size:22,color:TEXT,font:'맑은 고딕'})]
       }));
     });
     (sub.tables||[]).forEach(function(tbl){
@@ -1640,13 +1640,13 @@ function makeDocxElements(data, docxLib){
         new TableRow({tableHeader:true,children:tbl.headers.map(function(h){
           return new TableCell({borders:brd,shading:{fill:BLUE_DARK,type:ShadingType.CLEAR},
             margins:{top:80,bottom:80,left:160,right:160},
-            children:[new Paragraph({children:[new TextRun({text:h,bold:true,size:20,color:WHITE,font:'맑은 고딕'})]})]});
+            children:[new Paragraph({children:[new TextRun({text:stripTags(h),bold:true,size:20,color:WHITE,font:'맑은 고딕'})]})]});
         })})
       ].concat(tbl.rows.map(function(row,ri){
         return new TableRow({children:row.map(function(cell){
           return new TableCell({borders:brd,shading:{fill:ri%2===1?'F5F8FC':'FFFFFF',type:ShadingType.CLEAR},
             margins:{top:80,bottom:80,left:160,right:160},
-            children:[new Paragraph({children:[new TextRun({text:String(cell),size:20,color:TEXT,font:'맑은 고딕'})]})]});
+            children:[new Paragraph({children:[new TextRun({text:stripTags(String(cell)),size:20,color:TEXT,font:'맑은 고딕'})]})]});
         })});
       }));
       items.push(new Table({width:{size:9026,type:WidthType.DXA},columnWidths:Array(colCount).fill(colW2),rows:tRows}));
