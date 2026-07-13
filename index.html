@@ -118,6 +118,21 @@
 </style>
 </head>
 <body>
+<script>
+(function() {
+  const SITE_PASSWORD = "tridge2026!";
+  const SESSION_KEY = "export_report_auth";
+
+  if (sessionStorage.getItem(SESSION_KEY) === "true") return;
+
+  const input = prompt("비밀번호를 입력하세요");
+  if (input !== SITE_PASSWORD) {
+    document.body.innerHTML = "<h2 style='text-align:center;margin-top:100px;font-family:sans-serif;'>접근 권한이 없습니다.</h2>";
+    throw new Error("Access denied");
+  }
+  sessionStorage.setItem(SESSION_KEY, "true");
+})();
+</script>
 
 <div class="header">
   <div class="logo">
